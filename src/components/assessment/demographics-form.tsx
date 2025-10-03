@@ -3,7 +3,7 @@
  * 遵循最小化数据收集原则，保护用户隐私
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -23,6 +23,32 @@ export function DemographicsForm({ onSubmit, onBack, initialData }: Demographics
     consentToParticipate: true,
     ...initialData
   });
+  // load draft from localStorage if no initialData
+  useEffect(() => {
+    if (initialData) return; // if page provided initial data, prefer it
+    try {
+      const raw = localStorage.getItem('sri_demographics_draft');
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        setFormData(prev => ({ ...prev, ...parsed }));
+      }
+    } catch (e) {
+      console.error('Failed to load demographics draft', e);
+    }
+  }, [initialData]);
+
+  // persist draft on changes (debounced)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem('sri_demographics_draft', JSON.stringify(formData));
+      } catch (e) {
+        console.error('Failed to save demographics draft', e);
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [formData]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleChange = (questionId: string, value: string) => {

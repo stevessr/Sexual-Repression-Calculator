@@ -3,7 +3,7 @@
  * 提供专业的伦理保护和透明的信息披露
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -24,6 +24,32 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
     nonDiagnostic: false,
     ...(isMinor && { parentalConsent: false, ageConfirmation: false })
   });
+
+  // load persisted agreements
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('sri_consent_draft');
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        setAgreements(prev => ({ ...prev, ...parsed }));
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  // persist agreements on change (debounced)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem('sri_consent_draft', JSON.stringify(agreements));
+      } catch (e) {
+        console.error('Failed to persist consent draft', e);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [agreements]);
 
   const allAgreed = Object.values(agreements).every(Boolean);
 

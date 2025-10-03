@@ -3,7 +3,7 @@
  * 提供完整的题目概览和横向选项布局
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -56,7 +56,7 @@ export function QuestionnaireList({
     return INCREMENTAL_ASSESSMENT_SCALES;
   };
 
-  const scaleIds = getScalesForUser();
+  const scaleIds = useMemo(() => getScalesForUser(), [type, demographics, useDetailed]);
   const userGroup = getUserGroupDescription(demographics);
   const allQuestions = scaleIds.flatMap(scaleId => ALL_SCALES[scaleId]?.questions ?? []);
 
@@ -82,16 +82,29 @@ export function QuestionnaireList({
   }, [type]);
 
   useEffect(() => {
-    // ensure every selected scale has a page
+    // ensure every selected scale has a page, but only update if changed
     setScalePages(prev => {
       const next = { ...prev };
+      let changed = false;
       scaleIds.forEach(id => {
-        if (!(id in next)) next[id] = 0;
+        if (!(id in next)) {
+          next[id] = 0;
+          changed = true;
+        }
       });
-      return next;
+      // also remove keys for scales that no longer exist
+      Object.keys(next).forEach(k => {
+        if (!scaleIds.includes(k)) {
+          delete next[k];
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
     });
-    // clamp currentScaleIndex when scaleIds changes
-    setCurrentScaleIndex(idx => Math.min(idx, Math.max(0, scaleIds.length - 1)));
+
+    // clamp currentScaleIndex when scaleIds changes, but only if needed
+    const clamped = Math.min(currentScaleIndex, Math.max(0, scaleIds.length - 1));
+    if (clamped !== currentScaleIndex) setCurrentScaleIndex(clamped);
   }, [scaleIds]);
 
   // auto save
