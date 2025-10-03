@@ -3,7 +3,7 @@
  * 负责管理整个评估流程，包括知情同意、人口学信息、量表问卷等
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,18 @@ export default function Assessment() {
   
   // 状态管理
   const [currentStep, setCurrentStep] = useState<AssessmentStep>('consent');
-  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [sessionId, setSessionId] = useState(() => {
+    try {
+      const raw = localStorage.getItem('sri_assessment_progress');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.sessionId) return parsed.sessionId as string;
+      }
+    } catch (e) {
+      // ignore
+    }
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  });
   const [demographics, setDemographics] = useState<Demographics | null>(null);
   const [responses, setResponses] = useState<Response[]>([]);
   const [session, setSession] = useState<AssessmentSession | null>(null);
@@ -44,6 +55,50 @@ export default function Assessment() {
     };
     setSession(newSession);
   }, [sessionId, assessmentType]);
+
+  // load persisted progress (if any) on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('sri_assessment_progress');
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!parsed) return;
+      if (parsed.type && parsed.type !== assessmentType) return; // only restore same type
+
+      if (parsed.sessionId) {
+        setSessionId(parsed.sessionId);
+      }
+      if (parsed.currentStep) setCurrentStep(parsed.currentStep as AssessmentStep);
+      if (parsed.demographics) setDemographics(parsed.demographics as Demographics);
+      if (parsed.responses) setResponses(parsed.responses as Response[]);
+    } catch (e) {
+      console.error('Failed to restore assessment progress', e);
+    }
+  }, []);
+
+  // persist progress (debounced)
+  const saveTimer = useRef<number | null>(null);
+  useEffect(() => {
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => {
+      try {
+        const payload = {
+          sessionId,
+          type: assessmentType,
+          currentStep,
+          demographics,
+          responses,
+          timestamp: new Date().toISOString()
+        } as any;
+        localStorage.setItem('sri_assessment_progress', JSON.stringify(payload));
+      } catch (e) {
+        console.error('Failed to save assessment progress', e);
+      }
+    }, 500);
+    return () => {
+      if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    };
+  }, [sessionId, assessmentType, currentStep, demographics, responses]);
 
   // 检测是否为未成年人
   const isMinorUser = demographics?.age === '0'; // 14-17岁年龄段
@@ -105,7 +160,14 @@ export default function Assessment() {
 
       setSession(completedSession);
       saveAssessmentSession(completedSession);
-
+      // clear transient progress
+      try {
+        localStorage.removeItem('sri_assessment_progress');
+        localStorage.removeItem('sri_consent_draft');
+        localStorage.removeItem('sri_demographics_draft');
+      } catch (e) {
+        // ignore
+      }
       // 跳转到结果页面
       setTimeout(() => {
         navigate(`/results?sessionId=${sessionId}`);
