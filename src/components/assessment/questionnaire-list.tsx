@@ -3,7 +3,7 @@
  * 提供完整的题目概览和横向选项布局
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -327,28 +327,77 @@ export function QuestionnaireList({
         </CardContent>
       </Card>
 
-      {/* 右侧悬浮快速跳转：显示当前量表的题号（已答绿色/未答红色），点击滚动到题目 */}
-      <div className="fixed right-6 top-32 w-56 bg-white border rounded-lg p-3 shadow-lg z-50">
-        <div className="text-xs text-muted-foreground mb-2">快速跳转（本量表）</div>
-        <div className="grid grid-cols-4 gap-2 max-h-96 overflow-auto">
-          {(ALL_SCALES[currentScaleId]?.questions ?? []).map((q, qi) => {
-            const isAnswered = responses.some(r => r.questionId === q.id);
-            return (
+      {/* 右侧悬浮快速跳转：自动吸附/隐藏，展开时显示题号网格 */}
+      {(() => {
+        const [open, setOpen] = useState(false);
+        const panelRef = useRef<HTMLDivElement>(null);
+
+        // 点击页面其他区域自动收起
+        useEffect(() => {
+          if (!open) return;
+          const handler = (e: MouseEvent) => {
+            if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+              setOpen(false);
+            }
+          };
+          document.addEventListener('mousedown', handler);
+          return () => document.removeEventListener('mousedown', handler);
+        }, [open]);
+
+        // 吸附到右侧边缘的小按钮
+        return (
+          <div className="fixed right-6 top-32 z-50" style={{ pointerEvents: 'auto' }}>
+            {!open && (
               <button
-                key={q.id}
-                onClick={() => {
-                  const el = document.getElementById(`question-${q.id}`);
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }}
-                aria-label={`跳转到第 ${qi + 1} 题`}
-                className={`w-8 h-8 flex items-center justify-center rounded-md text-xs font-medium border ${isAnswered ? 'bg-green-500 text-white border-green-600' : 'bg-red-100 text-red-700 border-red-200'} hover:scale-105 transition-transform`}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-psychology-primary text-white shadow-lg border-2 border-psychology-primary hover:bg-psychology-primary/90 transition-all"
+                style={{ position: 'absolute', right: 0, top: 0 }}
+                aria-label="展开快速跳转"
+                onClick={() => setOpen(true)}
               >
-                {qi + 1}
+                <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><rect width="20" height="20" rx="6" fill="currentColor"/><text x="10" y="15" textAnchor="middle" fontSize="13" fill="#fff">跳</text></svg>
               </button>
-            );
-          })}
-        </div>
-      </div>
+            )}
+            {open && (
+              <div
+                ref={panelRef}
+                className="w-56 bg-white border rounded-lg p-3 shadow-lg transition-all animate-in fade-in"
+                style={{ position: 'absolute', right: 0, top: 0 }}
+                tabIndex={-1}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs text-muted-foreground">快速跳转（本量表）</div>
+                  <button
+                    className="w-6 h-6 flex items-center justify-center rounded-full bg-muted text-foreground border ml-2"
+                    aria-label="收起"
+                    onClick={() => setOpen(false)}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16"><path d="M4 8h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                  </button>
+                </div>
+                <div className="grid grid-cols-4 gap-2 max-h-96 overflow-auto">
+                  {(ALL_SCALES[currentScaleId]?.questions ?? []).map((q, qi) => {
+                    const isAnswered = responses.some(r => r.questionId === q.id);
+                    return (
+                      <button
+                        key={q.id}
+                        onClick={() => {
+                          const el = document.getElementById(`question-${q.id}`);
+                          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          setOpen(false);
+                        }}
+                        aria-label={`跳转到第 ${qi + 1} 题`}
+                        className={`w-8 h-8 flex items-center justify-center rounded-md text-xs font-medium border ${isAnswered ? 'bg-green-500 text-white border-green-600' : 'bg-red-100 text-red-700 border-red-200'} hover:scale-105 transition-transform`}
+                      >
+                        {qi + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       <div className="text-center py-4">
         <p className="text-xs text-muted-foreground max-w-2xl mx-auto">请根据您的真实感受选择最符合的选项。所有回答都将被严格保密，仅用于生成您的个人评估报告。您可以随时修改之前的回答。</p>

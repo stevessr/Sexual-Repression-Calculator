@@ -62,18 +62,20 @@ export function calculateRawScore(responses: Response[], scaleId: string): numbe
   for (const response of scaleResponses) {
     const question = scale.questions.find(q => q.id === response.questionId);
     if (question) {
-      // 验证回答值的有效性
+      // 验证回答值的有效性：允许滑块产生的小数（保留精度），仅在超出题目定义的最小/最大值时截断
       const validValues = question.options.map(o => o.value);
-      if (!validValues.includes(response.value)) {
-        console.warn(`Invalid response value ${response.value} for question ${question.id}`);
-        continue;
+      const minValue = Math.min(...validValues);
+      const maxValue = Math.max(...validValues);
+      let rawValue = response.value;
+      if (rawValue < minValue || rawValue > maxValue) {
+        console.warn(`Response value ${response.value} for question ${question.id} out of range [${minValue}, ${maxValue}], clamping.`);
+        rawValue = Math.max(minValue, Math.min(maxValue, rawValue));
       }
       
       // 处理反向计分
-      let score = response.value;
+      let score = rawValue;
       if (question.reverse) {
-        const maxValue = Math.max(...validValues);
-        const minValue = Math.min(...validValues);
+        // reverse using the observed/clamped raw value and scale bounds
         score = maxValue + minValue - score;
       }
       totalScore += score;
@@ -303,11 +305,18 @@ export function calculateSRI(dimensionScores: DimensionScores): SRIResult {
   
   // 确定SRI等级
   let level: keyof typeof SRI_LEVELS = 'moderate';
+  let found = false;
   for (const [levelKey, levelData] of Object.entries(SRI_LEVELS)) {
     if (totalScore >= levelData.min && totalScore < levelData.max) {
       level = levelKey as keyof typeof SRI_LEVELS;
+      found = true;
       break;
     }
+  }
+  // handle boundary case when score equals the top boundary (e.g., 100)
+  if (!found) {
+    const levelKeys = Object.keys(SRI_LEVELS) as Array<keyof typeof SRI_LEVELS>;
+    level = levelKeys[levelKeys.length - 1]; // assign highest level
   }
   
   return {
