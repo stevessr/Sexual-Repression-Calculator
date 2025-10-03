@@ -17,12 +17,14 @@ interface ConsentFormProps {
 }
 
 export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormProps) {
+  // Always include minor-related keys to keep checkboxes controlled across renders
   const [agreements, setAgreements] = useState({
     purpose: false,
     privacy: false,
     voluntary: false,
     nonDiagnostic: false,
-    ...(isMinor && { parentalConsent: false, ageConfirmation: false })
+    parentalConsent: false,
+    ageConfirmation: false
   });
 
   // load persisted agreements

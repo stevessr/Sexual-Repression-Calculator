@@ -20,7 +20,7 @@ type AssessmentStep = 'consent' | 'demographics' | 'questionnaire' | 'processing
 
 export default function Assessment() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   // 获取评估类型
   const assessmentType = (searchParams.get('type') as 'quick' | 'full') || 'quick';
@@ -99,6 +99,24 @@ export default function Assessment() {
       if (saveTimer.current) window.clearTimeout(saveTimer.current);
     };
   }, [sessionId, assessmentType, currentStep, demographics, responses]);
+
+  // sync progress into URL so the address carries current session and step
+  useEffect(() => {
+    try {
+      const currentSession = searchParams.get('sessionId');
+      const currentStepParam = searchParams.get('step');
+      // avoid unnecessary updates
+      if (currentSession === sessionId && currentStepParam === currentStep) return;
+
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('type', assessmentType);
+      if (sessionId) params.set('sessionId', sessionId); else params.delete('sessionId');
+      if (currentStep) params.set('step', currentStep); else params.delete('step');
+      setSearchParams(params, { replace: true });
+    } catch (e) {
+      console.error('Failed to sync progress to URL', e);
+    }
+  }, [assessmentType, sessionId, currentStep, searchParams, setSearchParams]);
 
   // 检测是否为未成年人
   const isMinorUser = demographics?.age === '0'; // 14-17岁年龄段
@@ -179,6 +197,17 @@ export default function Assessment() {
       setCurrentStep('questionnaire');
     }
   };
+
+  // If the page is loaded with ?step=processing (or restored), automatically start processing
+  const processingStartedRef = React.useRef(false);
+  useEffect(() => {
+    if (currentStep === 'processing' && !processingStartedRef.current) {
+      processingStartedRef.current = true;
+      // call the same handler to perform calculation and navigation
+      handleQuestionnaireComplete();
+    }
+  // intentionally only watch currentStep; handler uses latest state variables
+  }, [currentStep]);
 
   // 获取步骤进度
   const getStepProgress = () => {
