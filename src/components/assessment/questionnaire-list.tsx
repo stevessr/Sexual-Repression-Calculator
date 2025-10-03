@@ -11,9 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, AlertCircle, ArrowLeft, ArrowRight, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Question, Response, Demographics } from '@/types';
-import { 
-  ALL_SCALES, 
-  QUICK_ASSESSMENT_SCALES, 
+import {
+  ALL_SCALES,
+  QUICK_ASSESSMENT_SCALES,
+  INCREMENTAL_ASSESSMENT_SCALES,
   FULL_ASSESSMENT_SCALES,
   getAdaptiveScales,
   getAdaptiveFullScales,
@@ -21,6 +22,7 @@ import {
   isInexperienced,
   getUserGroupDescription
 } from '@/lib/scales';
+import { useSearchParams } from 'react-router-dom';
 
 interface QuestionnaireListProps {
   type: 'quick' | 'full';
@@ -40,12 +42,28 @@ export function QuestionnaireList({
   onBack
 }: QuestionnaireListProps) {
   // 根据用户特征选择适应性量表
+  // 说明：原来的“完整版”现在作为“增量测评”（INCREMENTAL）使用。若需要更全面的全量测评，请在 URL 加上 detail=true
+  const [searchParams] = useSearchParams();
+  const useDetailed = searchParams.get('detail') === '1' || searchParams.get('detail') === 'true';
+
   const getScalesForUser = () => {
     if (type === 'quick') {
       return getAdaptiveScales(demographics);
-    } else {
-      return getAdaptiveFullScales(demographics);
     }
+
+    // type === 'full' （默认旧行为）
+    if (useDetailed) {
+      // 使用更全面的全量版本（包含所有量表或更完整的适应性完整版）
+      // 优先使用适应性完整版函数以考虑人口学差异
+      try {
+        return getAdaptiveFullScales(demographics);
+      } catch (e) {
+        return FULL_ASSESSMENT_SCALES;
+      }
+    }
+
+    // 默认行为：使用原有的完整版清单作为“增量测评”以减少题量
+    return INCREMENTAL_ASSESSMENT_SCALES;
   };
 
   const scaleIds = getScalesForUser();
