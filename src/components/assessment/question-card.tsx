@@ -6,8 +6,8 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+
 import { Badge } from '@/components/ui/badge';
 import { SkipForward, AlertCircle } from 'lucide-react';
 import { Question, QuestionOption, Response } from '@/types';
@@ -48,7 +48,7 @@ export function QuestionCard({
     // 立即提交回答，但不自动跳转
     const response: Response = {
       questionId: question.id,
-      value: parseInt(value),
+      value: parseFloat(value),
       timestamp: new Date()
     };
     onAnswer(response);
@@ -62,15 +62,17 @@ export function QuestionCard({
     onSkip?.();
   };
 
-  const getOptionColorClass = (option: QuestionOption, isSelected: boolean) => {
-    if (!isSelected) return 'hover:bg-muted/50';
-    
-    // 根据选项值设置不同颜色
-    const value = option.value;
-    if (value <= 2) return 'bg-green-100 border-green-300 text-green-800';
-    if (value === 3) return 'bg-yellow-100 border-yellow-300 text-yellow-800';
-    return 'bg-red-100 border-red-300 text-red-800';
-  };
+  const sortedOptions = React.useMemo(() => [...question.options].sort((a, b) => a.value - b.value), [question.options]);
+  const min = sortedOptions[0].value;
+  const max = sortedOptions[sortedOptions.length - 1].value;
+  const step = sortedOptions.length > 1 ? sortedOptions[1].value - sortedOptions[0].value : 0.1;
+  // 将选中的字符串值转换为数字，并按数值最近邻匹配到对应的选项（区域匹配）
+  const numericSelected = selectedValue ? Number(selectedValue) : undefined;
+  const selectedOption = typeof numericSelected === 'number' && !isNaN(numericSelected)
+    ? sortedOptions.reduce((best, o) => {
+        return Math.abs(o.value - numericSelected) < Math.abs(best.value - numericSelected) ? o : best;
+      }, sortedOptions[0])
+    : undefined;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -106,45 +108,27 @@ export function QuestionCard({
           </div>
 
           {/* 选项区域 */}
-          <div className="space-y-4">
-            <RadioGroup
-              value={selectedValue}
-              onValueChange={handleValueChange}
-              className="space-y-3"
-            >
-              {question.options.map((option) => {
-                const isSelected = selectedValue === option.value.toString();
-                const colorClass = getOptionColorClass(option, isSelected);
-                
-                return (
-                  <div 
-                    key={option.value} 
-                    className={`
-                      flex items-center p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
-                      ${colorClass}
-                      ${isSelected ? 'border-current' : 'border-muted'}
-                    `}
-                  >
-                    <RadioGroupItem 
-                      value={option.value.toString()} 
-                      id={`option-${option.value}`}
-                      className="text-current"
-                    />
-                    <Label 
-                      htmlFor={`option-${option.value}`}
-                      className="ml-4 cursor-pointer flex-1 font-medium"
-                    >
-                      {option.label}
-                      {option.description && (
-                        <span className="block text-sm font-normal opacity-80 mt-1">
-                          {option.description}
-                        </span>
-                      )}
-                    </Label>
-                  </div>
-                );
-              })}
-            </RadioGroup>
+          <div className="space-y-6 pt-4">
+            <Slider
+              value={selectedValue ? [parseFloat(selectedValue)] : [min]}
+              onValueChange={(value) => handleValueChange(value[0].toString())}
+              min={min}
+              max={max}
+              step={step}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground px-1">
+              {sortedOptions.map((option) => (
+                <span key={option.value} className="text-center w-1/5">
+                  {option.label}
+                </span>
+              ))}
+            </div>
+            {selectedOption && (
+              <div className="text-center font-medium text-psychology-primary pt-2 text-sm">
+                当前选择: {selectedOption.label}
+              </div>
+            )}
           </div>
 
           {/* 验证提示 */}

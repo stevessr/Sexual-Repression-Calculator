@@ -6,8 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, AlertCircle, ArrowLeft, ArrowRight, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -405,43 +404,46 @@ export function QuestionnaireList({
                       </div>
                     </div>
 
-                    {/* 横向选项布局 */}
-                    <RadioGroup
-                      value={currentResponse?.value.toString() || ''}
-                      onValueChange={(value) => handleAnswer(question.id, parseInt(value))}
-                      className="mt-4"
-                    >
-                      <div className="grid grid-cols-1 gap-3 sm:gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5">
-                        {question.options.map((option) => {
-                          const isSelected = currentResponse?.value === option.value;
-                          
-                          return (
-                            <div 
-                              key={option.value}
-                              className={`
-                                flex items-center p-2 sm:p-3 rounded-lg border-2 transition-all duration-200 cursor-pointer hover:bg-white/50
-                                ${isSelected 
-                                  ? 'bg-white border-psychology-primary shadow-sm' 
-                                  : 'bg-white/30 border-gray-300 hover:border-gray-400'
-                                }
-                              `}
-                            >
-                              <RadioGroupItem 
-                                value={option.value.toString()} 
-                                id={`${question.id}-option-${option.value}`}
-                                className="shrink-0"
-                              />
-                              <Label 
-                                htmlFor={`${question.id}-option-${option.value}`}
-                                className="ml-2 sm:ml-3 cursor-pointer text-xs sm:text-sm font-medium flex-1 leading-tight"
-                              >
-                                {option.label}
-                              </Label>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </RadioGroup>
+                    {/* 滑块选项布局 */}
+                        <div className="pt-2">
+                          {/* 将当前响应值作为数字处理，并按最近邻匹配到选项标签（区域匹配） */}
+                          {/** numericCurrent 可能为 undefined */}
+                          {
+                            (() => {
+                              const numericCurrent = currentResponse ? Number(currentResponse.value) : undefined;
+                              const selectedOption = (typeof numericCurrent === 'number' && !isNaN(numericCurrent) && question.options.length > 0)
+                                ? question.options.reduce((best, o) => {
+                                    return Math.abs(o.value - (numericCurrent as number)) < Math.abs(best.value - (numericCurrent as number)) ? o : best;
+                                  }, question.options[0])
+                                : undefined;
+
+                              return (
+                                <>
+                                  <Slider
+                                    value={currentResponse ? [Number(currentResponse.value)] : undefined}
+                                    onValueChange={(value) => handleAnswer(question.id, value[0])}
+                                    min={question.options[0].value}
+                                    max={question.options[question.options.length - 1].value}
+                                    step={question.options.length > 1 ? question.options[1].value - question.options[0].value : 1}
+                                    className="w-full"
+                                  />
+                                  <div className="flex justify-between text-xs text-muted-foreground px-1 mt-2">
+                                    {question.options.map((option) => (
+                                      <span key={option.value} className="text-center w-1/5">
+                                        {option.label}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  {selectedOption && (
+                                    <div className="text-center font-medium text-psychology-primary pt-2 text-sm">
+                                      当前选择: {selectedOption.label}
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            })()
+                          }
+                        </div>
 
                     {/* 必答题提醒 */}
                     {question.required && !isAnswered && (

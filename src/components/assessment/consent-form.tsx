@@ -53,7 +53,10 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
         </CardHeader>
         <CardContent className="space-y-6">
           {/* 评估目的 */}
-          <div className="space-y-3">
+          <div 
+            className="space-y-3 cursor-pointer p-4 rounded-lg hover:bg-muted/50 transition-colors"
+            onClick={() => handleAgreementChange('purpose', !agreements.purpose)}
+          >
             <div className="flex items-start gap-3">
               <Eye className="w-5 h-5 text-psychology-secondary mt-1 flex-shrink-0" />
               <div>
@@ -66,10 +69,11 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
               </div>
             </div>
             <div className="ml-8">
-              <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <label className="flex items-start gap-2 text-sm">
                 <Checkbox 
                   checked={agreements.purpose}
                   onCheckedChange={(checked) => handleAgreementChange('purpose', !!checked)}
+                  onClick={(e) => e.stopPropagation()}
                   className="mt-1"
                 />
                 <span>我理解本评估的目的是帮助我了解自己的性心理特征</span>
@@ -78,7 +82,10 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
           </div>
 
           {/* 隐私保护 */}
-          <div className="space-y-3">
+          <div 
+            className="space-y-3 cursor-pointer p-4 rounded-lg hover:bg-muted/50 transition-colors"
+            onClick={() => handleAgreementChange('privacy', !agreements.privacy)}
+          >
             <div className="flex items-start gap-3">
               <Shield className="w-5 h-5 text-psychology-secondary mt-1 flex-shrink-0" />
               <div>
@@ -91,10 +98,11 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
               </div>
             </div>
             <div className="ml-8">
-              <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <label className="flex items-start gap-2 text-sm">
                 <Checkbox 
                   checked={agreements.privacy}
                   onCheckedChange={(checked) => handleAgreementChange('privacy', !!checked)}
+                  onClick={(e) => e.stopPropagation()}
                   className="mt-1"
                 />
                 <span>我理解我的数据将被匿名化处理并仅保存在本地设备上</span>
@@ -103,7 +111,10 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
           </div>
 
           {/* 自愿参与 */}
-          <div className="space-y-3">
+          <div 
+            className="space-y-3 cursor-pointer p-4 rounded-lg hover:bg-muted/50 transition-colors"
+            onClick={() => handleAgreementChange('voluntary', !agreements.voluntary)}
+          >
             <div className="flex items-start gap-3">
               <Users className="w-5 h-5 text-psychology-secondary mt-1 flex-shrink-0" />
               <div>
@@ -116,10 +127,11 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
               </div>
             </div>
             <div className="ml-8">
-              <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <label className="flex items-start gap-2 text-sm">
                 <Checkbox 
                   checked={agreements.voluntary}
                   onCheckedChange={(checked) => handleAgreementChange('voluntary', !!checked)}
+                  onClick={(e) => e.stopPropagation()}
                   className="mt-1"
                 />
                 <span>我理解参与是自愿的，可以随时退出评估</span>
@@ -128,7 +140,10 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
           </div>
 
           {/* 非诊断性质 */}
-          <div className="space-y-3">
+          <div 
+            className="space-y-3 cursor-pointer p-4 rounded-lg hover:bg-muted/50 transition-colors"
+            onClick={() => handleAgreementChange('nonDiagnostic', !agreements.nonDiagnostic)}
+          >
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-psychology-warning mt-1 flex-shrink-0" />
               <div>
@@ -141,10 +156,11 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
               </div>
             </div>
             <div className="ml-8">
-              <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <label className="flex items-start gap-2 text-sm">
                 <Checkbox 
                   checked={agreements.nonDiagnostic}
                   onCheckedChange={(checked) => handleAgreementChange('nonDiagnostic', !!checked)}
+                  onClick={(e) => e.stopPropagation()}
                   className="mt-1"
                 />
                 <span>我理解这不是医疗诊断工具，如有需要会寻求专业帮助</span>
@@ -168,21 +184,21 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
                   </div>
                 </div>
                 <div className="ml-8 space-y-2">
-                  <label className="flex items-start gap-2 text-sm cursor-pointer">
+                  <label className="flex items-start gap-3 text-sm cursor-pointer p-3 rounded-md hover:bg-muted">
                     <Checkbox 
                       checked={agreements.ageConfirmation}
                       onCheckedChange={(checked) => handleAgreementChange('ageConfirmation', !!checked)}
                       className="mt-1"
                     />
-                    <span>我确认我的年龄在14-17岁之间，理解这是一个教育性的自我认知工具</span>
+                    <span className="flex-1">我确认我的年龄在14-17岁之间，理解这是一个教育性的自我认知工具</span>
                   </label>
-                  <label className="flex items-start gap-2 text-sm cursor-pointer">
+                  <label className="flex items-start gap-3 text-sm cursor-pointer p-3 rounded-md hover:bg-muted">
                     <Checkbox 
                       checked={agreements.parentalConsent}
                       onCheckedChange={(checked) => handleAgreementChange('parentalConsent', !!checked)}
                       className="mt-1"
                     />
-                    <span>我已告知家长或监护人关于此评估，或者我有能力独立做出参与决定</span>
+                    <span className="flex-1">我已告知家长或监护人关于此评估，或者我有能力独立做出参与决定</span>
                   </label>
                 </div>
               </div>
