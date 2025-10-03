@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, AlertCircle, ArrowLeft, ArrowRight, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle, AlertCircle, ArrowLeft, BarChart3 } from 'lucide-react';
 import { Question, Response, Demographics } from '@/types';
 import {
   ALL_SCALES,
@@ -41,211 +41,132 @@ export function QuestionnaireList({
   onComplete,
   onBack
 }: QuestionnaireListProps) {
-  // 根据用户特征选择适应性量表
-  // 说明：原来的“完整版”现在作为“增量测评”（INCREMENTAL）使用。若需要更全面的全量测评，请在 URL 加上 detail=true
   const [searchParams] = useSearchParams();
   const useDetailed = searchParams.get('detail') === '1' || searchParams.get('detail') === 'true';
 
   const getScalesForUser = () => {
-    if (type === 'quick') {
-      return getAdaptiveScales(demographics);
-    }
-
-    // type === 'full' （默认旧行为）
+    if (type === 'quick') return getAdaptiveScales(demographics);
     if (useDetailed) {
-      // 使用更全面的全量版本（包含所有量表或更完整的适应性完整版）
-      // 优先使用适应性完整版函数以考虑人口学差异
       try {
         return getAdaptiveFullScales(demographics);
       } catch (e) {
         return FULL_ASSESSMENT_SCALES;
       }
     }
-
-    // 默认行为：使用原有的完整版清单作为“增量测评”以减少题量
     return INCREMENTAL_ASSESSMENT_SCALES;
   };
 
   const scaleIds = getScalesForUser();
   const userGroup = getUserGroupDescription(demographics);
-  
-  // 显示选中的量表信息
-  console.log(`用户群体: ${userGroup}, 选中量表:`, scaleIds);
-  const allQuestions = scaleIds.flatMap(scaleId => {
-    const scale = ALL_SCALES[scaleId];
-    return scale ? scale.questions : [];
-  });
+  const allQuestions = scaleIds.flatMap(scaleId => ALL_SCALES[scaleId]?.questions ?? []);
 
-  const [scrollToQuestionId, setScrollToQuestionId] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(0);
+  // 当前展示的量表索引（每个量表单独一页）
+  const [currentScaleIndex, setCurrentScaleIndex] = useState<number>(0);
+  const currentScaleId = scaleIds[currentScaleIndex];
+  // 保留可选的每量表分页状态 if needed later
+  const [scalePages, setScalePages] = useState<Record<string, number>>({});
+  // PAGE_SIZE is used for legacy pagination calculations (kept for jump/scroll logic)
+  const PAGE_SIZE = 10;
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-  // 自动保存功能 - 使用debounced保存避免频繁操作
+  // restore
   useEffect(() => {
-    if (responses.length > 0) {
-      const saveTimer = setTimeout(() => {
-        try {
-          const saveData = {
-            type,
-            demographics,
-            responses,
-            currentPage,
-            timestamp: new Date().toISOString()
-          };
-          localStorage.setItem('sri_assessment_progress', JSON.stringify(saveData));
-          setLastSaved(new Date());
-        } catch (error) {
-          console.error('保存进度失败:', error);
-        }
-      }, 1000); // 1秒延迟保存
-
-      return () => clearTimeout(saveTimer);
-    }
-  }, [responses, type, demographics, currentPage]);
-
-  // 组件初始化时恢复进度
-  useEffect(() => {
-    const saved = localStorage.getItem('sri_assessment_progress');
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        if (data.type === type) {
-          setCurrentPage(data.currentPage || 0);
-          // 注意：responses由父组件管理，这里只恢复页面状态
-        }
-      } catch (error) {
-        console.error('恢复保存的进度时出错:', error);
-      }
+    const raw = localStorage.getItem('sri_assessment_progress');
+    if (!raw) return;
+    try {
+      const data = JSON.parse(raw);
+      if (data?.type === type && data?.scalePages) setScalePages(data.scalePages);
+    } catch (e) {
+      console.error(e);
     }
   }, [type]);
-  
-  // 分页设置 - 完整版采用分页模式
-  const usesPagination = type === 'full';
-  const questionsPerPage = usesPagination ? 15 : allQuestions.length;
-  const totalPages = usesPagination ? Math.ceil(allQuestions.length / questionsPerPage) : 1;
-  
-  // 获取当前页的题目
-  const getCurrentPageQuestions = () => {
-    if (!usesPagination) return allQuestions;
-    const startIndex = currentPage * questionsPerPage;
-    return allQuestions.slice(startIndex, startIndex + questionsPerPage);
-  };
-  
-  const currentPageQuestions = getCurrentPageQuestions();
 
-  // 获取指定题目的回答
-  const getResponseForQuestion = (questionId: string) => {
-    return responses.find(r => r.questionId === questionId);
-  };
+  useEffect(() => {
+    // ensure every selected scale has a page
+    setScalePages(prev => {
+      const next = { ...prev };
+      scaleIds.forEach(id => {
+        if (!(id in next)) next[id] = 0;
+      });
+      return next;
+    });
+    // clamp currentScaleIndex when scaleIds changes
+    setCurrentScaleIndex(idx => Math.min(idx, Math.max(0, scaleIds.length - 1)));
+  }, [scaleIds]);
 
-  // 处理回答
+  // auto save
+  useEffect(() => {
+    if (responses.length === 0) return;
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem('sri_assessment_progress', JSON.stringify({ type, demographics, responses, scalePages, timestamp: new Date().toISOString() }));
+        setLastSaved(new Date());
+      } catch (e) {
+        console.error(e);
+      }
+    }, 800);
+    return () => clearTimeout(t);
+  }, [responses, type, demographics, scalePages]);
+
+  const setPageForScale = (scaleId: string, page: number) => setScalePages(prev => ({ ...prev, [scaleId]: Math.max(0, page) }));
+
+  const getResponseForQuestion = (questionId: string) => responses.find(r => r.questionId === questionId);
+
   const handleAnswer = (questionId: string, value: number) => {
-    const response: Response = {
-      questionId,
-      value,
-      timestamp: new Date()
-    };
-
-    const updatedResponses = responses.filter(r => r.questionId !== questionId);
-    updatedResponses.push(response);
-    onResponseUpdate(updatedResponses);
+    const resp: Response = { questionId, value, timestamp: new Date() };
+    const updated = responses.filter(r => r.questionId !== questionId);
+    updated.push(resp);
+    onResponseUpdate(updated);
   };
 
-  // 获取回答统计
   const getAnswerStats = () => {
     const answered = responses.length;
     const unanswered = allQuestions.length - answered;
-    const requiredUnanswered = allQuestions
-      .filter(q => q.required)
-      .filter(q => !responses.some(r => r.questionId === q.id))
-      .length;
-    
+    const requiredUnanswered = allQuestions.filter(q => q.required).filter(q => !responses.some(r => r.questionId === q.id)).length;
     return { answered, unanswered, requiredUnanswered };
   };
 
-  // 完成评估
   const handleComplete = () => {
     const stats = getAnswerStats();
     if (stats.requiredUnanswered > 0) {
-      // 滚动到第一个未回答的必答题
-      const firstUnanswered = allQuestions.find(q => 
-        q.required && !responses.some(r => r.questionId === q.id)
-      );
+      const firstUnanswered = allQuestions.find(q => q.required && !responses.some(r => r.questionId === q.id));
       if (firstUnanswered) {
-        // 如果是分页模式，先跳转到对应页面
-        if (usesPagination) {
-          const questionIndex = allQuestions.findIndex(q => q.id === firstUnanswered.id);
-          const targetPage = Math.floor(questionIndex / questionsPerPage);
-          if (targetPage !== currentPage) {
-            setCurrentPage(targetPage);
-            setTimeout(() => {
-              document.getElementById(`question-${firstUnanswered.id}`)?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-              });
-            }, 100);
-            return;
-          }
+        // find owning scale and page
+        const owning = scaleIds.find(sid => (ALL_SCALES[sid]?.questions ?? []).some(q => q.id === firstUnanswered.id));
+        if (owning) {
+          const idx = (ALL_SCALES[owning].questions).findIndex(q => q.id === firstUnanswered.id);
+          const targetPage = Math.floor(idx / PAGE_SIZE);
+          setPageForScale(owning, targetPage);
+          setTimeout(() => document.getElementById(`question-${firstUnanswered.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+          return;
         }
-        
-        document.getElementById(`question-${firstUnanswered.id}`)?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
+        document.getElementById(`question-${firstUnanswered.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-      
       alert(`还有 ${stats.requiredUnanswered} 道必答题未完成，请继续填写。`);
       return;
     }
-    
-    // 清除保存的进度
     localStorage.removeItem('sri_assessment_progress');
     onComplete();
   };
 
-  // 按量表分组题目 - 根据分页模式调整
-  const questionsByScale = scaleIds.reduce((acc, scaleId) => {
-    const scale = ALL_SCALES[scaleId];
-    if (scale) {
-      if (usesPagination) {
-        // 分页模式：只显示当前页的题目
-        const scaleQuestionsOnPage = scale.questions.filter(q => 
-          currentPageQuestions.some(pq => pq.id === q.id)
-        );
-        if (scaleQuestionsOnPage.length > 0) {
-          acc[scaleId] = scaleQuestionsOnPage;
-        }
-      } else {
-        acc[scaleId] = scale.questions;
-      }
-    }
-    return acc;
-  }, {} as Record<string, Question[]>);
-
-  // 分页导航函数
-  const goToNextPage = () => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage(currentPage + 1);
-      window.scrollTo(0, 0);
-    }
-  };
-
-  const goToPrevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage(currentPage - 1);
-      window.scrollTo(0, 0);
-    }
-  };
-
-  const canGoNext = currentPage < totalPages - 1;
-  const canGoPrev = currentPage > 0;
-
   const stats = getAnswerStats();
-  const progress = (stats.answered / allQuestions.length) * 100;
+  const progress = (stats.answered / Math.max(1, allQuestions.length)) * 100;
+
+  const goToNextScale = () => setCurrentScaleIndex(i => Math.min(scaleIds.length - 1, i + 1));
+  const goToPrevScale = () => setCurrentScaleIndex(i => Math.max(0, i - 1));
+
+  // quick-jump sidebar actions
+  const jumpToScale = (scaleId: string, page = 0) => {
+    setPageForScale(scaleId, page);
+    // scroll to top of that card after DOM update
+    setTimeout(() => {
+      const firstQ = (ALL_SCALES[scaleId]?.questions ?? [])[page * PAGE_SIZE];
+      if (firstQ) document.getElementById(`question-${firstQ.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* 顶部进度概览 */}
+    <div className="max-w-6xl mx-auto space-y-6 relative">
       <Card className="sri-card">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -255,29 +176,19 @@ export function QuestionnaireList({
                 问卷评估进度
               </CardTitle>
               <div className="flex items-center gap-2 mt-2">
-                <Badge variant="secondary" className="text-psychology-primary">
-                  {userGroup}
-                </Badge>
-                <Badge variant="outline">
-                  {type === 'quick' ? '快测版' : '完整版'}
-                </Badge>
+                <Badge variant="secondary" className="text-psychology-primary">{userGroup}</Badge>
+                <Badge variant="outline">{type === 'quick' ? '快测版' : '完整版'}</Badge>
               </div>
             </div>
+
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-psychology-primary border-psychology-primary">
-                {stats.answered} / {allQuestions.length} 已完成
-              </Badge>
-              {lastSaved && (
-                <Badge variant="secondary" className="text-xs">
-                  已保存 {lastSaved.toLocaleTimeString()}
-                </Badge>
-              )}
+              <Badge variant="outline" className="text-psychology-primary border-psychology-primary">{stats.answered} / {allQuestions.length} 已完成</Badge>
+              {lastSaved && <Badge variant="secondary" className="text-xs">已保存 {lastSaved.toLocaleTimeString()}</Badge>}
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <Progress value={progress} className="h-2" />
-          
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
             <div className="text-center p-3 bg-green-50 rounded-lg">
               <div className="text-2xl font-bold text-green-600">{stats.answered}</div>
@@ -295,68 +206,14 @@ export function QuestionnaireList({
         </CardContent>
       </Card>
 
-      {/* 分页导航 - 仅在完整版显示 */}
-      {usesPagination && (
-        <Card className="sri-card">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <Button
-                variant="outline"
-                onClick={goToPrevPage}
-                disabled={!canGoPrev}
-                className="flex items-center gap-2"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                上一页
-              </Button>
-
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-muted-foreground">
-                  第 {currentPage + 1} 页，共 {totalPages} 页
-                </span>
-                <div className="flex gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        setCurrentPage(i);
-                        window.scrollTo(0, 0);
-                      }}
-                      className={`
-                        w-8 h-8 rounded text-xs font-medium transition-colors
-                        ${i === currentPage 
-                          ? 'bg-psychology-primary text-white' 
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }
-                      `}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <Button
-                variant="outline"
-                onClick={goToNextPage}
-                disabled={!canGoNext}
-                className="flex items-center gap-2"
-              >
-                下一页
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* 按量表分组显示题目 */}
-      {Object.entries(questionsByScale).map(([scaleId, questions]) => {
+      {/* 当前量表：每个测评表单独成页面 */}
+      {(() => {
+        const scaleId = currentScaleId;
+        if (!scaleId) return <div>没有可用的量表</div>;
         const scale = ALL_SCALES[scaleId];
-        const scaleResponses = responses.filter(r => 
-          questions.some(q => q.id === r.questionId)
-        );
-        const scaleProgress = (scaleResponses.length / questions.length) * 100;
+        if (!scale) return <div>量表数据缺失：{scaleId}</div>;
+        const scaleResponses = responses.filter(r => scale.questions.some(q => q.id === r.questionId));
+        const scaleProgress = (scaleResponses.length / Math.max(1, scale.questions.length)) * 100;
 
         return (
           <Card key={scaleId} className="sri-card">
@@ -364,176 +221,124 @@ export function QuestionnaireList({
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg">{scale.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {scale.description}
-                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">{scale.description}</p>
                 </div>
                 <div className="text-right">
-                  <Badge variant="secondary">
-                    {scaleResponses.length} / {questions.length}
-                  </Badge>
+                  <Badge variant="secondary">{scaleResponses.length} / {scale.questions.length}</Badge>
                   <Progress value={scaleProgress} className="h-1 w-20 mt-2" />
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {questions.map((question, index) => {
+              {scale.questions.map((question, idx) => {
+                const absoluteIndex = idx; // index within the scale
                 const currentResponse = getResponseForQuestion(question.id);
                 const isAnswered = !!currentResponse;
-                
                 return (
-                  <div 
-                    key={question.id}
-                    id={`question-${question.id}`}
-                    className={`
-                      p-6 rounded-lg border-2 transition-all duration-200
-                      ${isAnswered 
-                        ? 'bg-green-50 border-green-200' 
-                        : question.required 
-                          ? 'bg-red-50 border-red-200'
-                          : 'bg-gray-50 border-gray-200'
-                      }
-                    `}
-                  >
-                    {/* 题目头部 */}
+                  <div key={question.id} id={`question-${question.id}`} className={`p-6 rounded-lg border-2 transition-all duration-200 ${isAnswered ? 'bg-green-50 border-green-200' : question.required ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <Badge variant="outline" className="text-xs">
-                            {index + 1}
-                          </Badge>
-                          {question.required && (
-                            <Badge variant="destructive" className="text-xs">
-                              必答
-                            </Badge>
-                          )}
-                          {isAnswered && (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          )}
+                          <Badge variant="outline" className="text-xs">{absoluteIndex + 1}</Badge>
+                          {question.required && <Badge variant="destructive" className="text-xs">必答</Badge>}
+                          {isAnswered && <CheckCircle className="w-4 h-4 text-green-500" />}
                         </div>
-                        <h3 className="text-base font-medium text-foreground leading-relaxed">
-                          {question.text}
-                        </h3>
-                        {question.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {question.description}
-                          </p>
-                        )}
+                        <h3 className="text-base font-medium text-foreground leading-relaxed">{question.text}</h3>
+                        {question.description && <p className="text-sm text-muted-foreground mt-1">{question.description}</p>}
                       </div>
                     </div>
 
-                    {/* 滑块选项布局 */}
-                        <div className="pt-2">
-                          {/* 将当前响应值作为数字处理，并按最近邻匹配到选项标签（区域匹配） */}
-                          {/** numericCurrent 可能为 undefined */}
-                          {
-                            (() => {
-                              const numericCurrent = currentResponse ? Number(currentResponse.value) : undefined;
-                              const selectedOption = (typeof numericCurrent === 'number' && !isNaN(numericCurrent) && question.options.length > 0)
-                                ? question.options.reduce((best, o) => {
-                                    return Math.abs(o.value - (numericCurrent as number)) < Math.abs(best.value - (numericCurrent as number)) ? o : best;
-                                  }, question.options[0])
-                                : undefined;
+                    <div className="pt-2">
+                      {(() => {
+                        const numericCurrent = currentResponse ? Number(currentResponse.value) : undefined;
+                        const selectedOption = (typeof numericCurrent === 'number' && !isNaN(numericCurrent) && question.options?.length > 0)
+                          ? question.options.reduce((best, o) => Math.abs(o.value - (numericCurrent as number)) < Math.abs(best.value - (numericCurrent as number)) ? o : best, question.options[0])
+                          : undefined;
+                        return (
+                          <>
+                            <Slider
+                              value={currentResponse ? [Number(currentResponse.value)] : undefined}
+                              onValueChange={(value) => handleAnswer(question.id, value[0])}
+                              min={question.options[0].value}
+                              max={question.options[question.options.length - 1].value}
+                              step={question.options.length > 1 ? question.options[1].value - question.options[0].value : 1}
+                              className="w-full"
+                            />
+                            <div className="flex justify-between text-xs text-muted-foreground px-1 mt-2">
+                              {question.options.map((option) => (
+                                <span key={option.value} className="text-center w-1/5">{option.label}</span>
+                              ))}
+                            </div>
+                            {selectedOption && <div className="text-center font-medium text-psychology-primary pt-2 text-sm">当前选择: {selectedOption.label}</div>}
+                          </>
+                        );
+                      })()}
+                    </div>
 
-                              return (
-                                <>
-                                  <Slider
-                                    value={currentResponse ? [Number(currentResponse.value)] : undefined}
-                                    onValueChange={(value) => handleAnswer(question.id, value[0])}
-                                    min={question.options[0].value}
-                                    max={question.options[question.options.length - 1].value}
-                                    step={question.options.length > 1 ? question.options[1].value - question.options[0].value : 1}
-                                    className="w-full"
-                                  />
-                                  <div className="flex justify-between text-xs text-muted-foreground px-1 mt-2">
-                                    {question.options.map((option) => (
-                                      <span key={option.value} className="text-center w-1/5">
-                                        {option.label}
-                                      </span>
-                                    ))}
-                                  </div>
-                                  {selectedOption && (
-                                    <div className="text-center font-medium text-psychology-primary pt-2 text-sm">
-                                      当前选择: {selectedOption.label}
-                                    </div>
-                                  )}
-                                </>
-                              );
-                            })()
-                          }
-                        </div>
-
-                    {/* 必答题提醒 */}
                     {question.required && !isAnswered && (
-                      <div className="flex items-center gap-2 mt-3 text-red-600">
-                        <AlertCircle className="w-4 h-4" />
-                        <span className="text-sm">此题为必答题</span>
-                      </div>
+                      <div className="flex items-center gap-2 mt-3 text-red-600"><AlertCircle className="w-4 h-4" /><span className="text-sm">此题为必答题</span></div>
                     )}
                   </div>
                 );
               })}
+
+              {/* 量表间切换控制 */}
+              <div className="flex items-center justify-between">
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={goToPrevScale} disabled={currentScaleIndex === 0}>上一量表</Button>
+                  <Button variant="outline" onClick={goToNextScale} disabled={currentScaleIndex >= scaleIds.length - 1}>下一量表</Button>
+                </div>
+                <div className="text-sm text-muted-foreground">第 {currentScaleIndex + 1} / {scaleIds.length} 个量表</div>
+              </div>
             </CardContent>
           </Card>
         );
-      })}
+      })()}
 
       {/* 底部操作区域 */}
       <Card className="sri-card">
         <CardContent className="p-6">
           <div className="flex justify-between items-center">
-            <Button 
-              variant="outline"
-              onClick={onBack}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              返回上一步
-            </Button>
+            <Button variant="outline" onClick={onBack} className="flex items-center gap-2"><ArrowLeft className="w-4 h-4" />返回上一步</Button>
 
             <div className="text-center">
-              {usesPagination && stats.requiredUnanswered > 0 && (
-                <p className="text-sm text-amber-600 mb-2">
-                  还有未完成的题目，请继续填写或查看其他页面
-                </p>
-              )}
-              {!usesPagination && (
-                <p className="text-sm text-muted-foreground mb-2">
-                  请确保所有必答题都已完成
-                </p>
-              )}
-              <Button 
-                onClick={handleComplete}
-                disabled={stats.requiredUnanswered > 0}
-                className="bg-psychology-primary hover:bg-psychology-primary/90 px-8"
-                size="lg"
-              >
-                完成评估并查看结果
-                <CheckCircle className="w-4 h-4 ml-2" />
-              </Button>
+              <p className="text-sm text-muted-foreground mb-2">请确保所有必答题都已完成</p>
+              <Button onClick={handleComplete} disabled={stats.requiredUnanswered > 0} className="bg-psychology-primary hover:bg-psychology-primary/90 px-8" size="lg">完成评估并查看结果 <CheckCircle className="w-4 h-4 ml-2" /></Button>
             </div>
 
             <div className="text-right">
-              <p className="text-sm text-muted-foreground">
-                进度: {Math.round(progress)}%
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {stats.requiredUnanswered > 0 
-                  ? `还有 ${stats.requiredUnanswered} 道必答题`
-                  : '所有必答题已完成'
-                }
-              </p>
+              <p className="text-sm text-muted-foreground">进度: {Math.round(progress)}%</p>
+              <p className="text-xs text-muted-foreground">{stats.requiredUnanswered > 0 ? `还有 ${stats.requiredUnanswered} 道必答题` : '所有必答题已完成'}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* 底部说明 */}
+      {/* 右侧悬浮快速跳转：显示当前量表的题号（已答绿色/未答红色），点击滚动到题目 */}
+      <div className="fixed right-6 top-32 w-56 bg-white border rounded-lg p-3 shadow-lg z-50">
+        <div className="text-xs text-muted-foreground mb-2">快速跳转（本量表）</div>
+        <div className="grid grid-cols-4 gap-2 max-h-96 overflow-auto">
+          {(ALL_SCALES[currentScaleId]?.questions ?? []).map((q, qi) => {
+            const isAnswered = responses.some(r => r.questionId === q.id);
+            return (
+              <button
+                key={q.id}
+                onClick={() => {
+                  const el = document.getElementById(`question-${q.id}`);
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+                aria-label={`跳转到第 ${qi + 1} 题`}
+                className={`w-8 h-8 flex items-center justify-center rounded-md text-xs font-medium border ${isAnswered ? 'bg-green-500 text-white border-green-600' : 'bg-red-100 text-red-700 border-red-200'} hover:scale-105 transition-transform`}
+              >
+                {qi + 1}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="text-center py-4">
-        <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-          请根据您的真实感受选择最符合的选项。所有回答都将被严格保密，仅用于生成您的个人评估报告。
-          您可以随时修改之前的回答。
-        </p>
+        <p className="text-xs text-muted-foreground max-w-2xl mx-auto">请根据您的真实感受选择最符合的选项。所有回答都将被严格保密，仅用于生成您的个人评估报告。您可以随时修改之前的回答。</p>
       </div>
     </div>
   );
