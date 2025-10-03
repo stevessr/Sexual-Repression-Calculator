@@ -20,7 +20,8 @@ import {
   getAdaptiveFullScales,
   isMinor,
   isInexperienced,
-  getUserGroupDescription
+  getUserGroupDescription,
+  getScaleInstruction
 } from '@/lib/scales';
 import { useSearchParams } from 'react-router-dom';
 
@@ -227,6 +228,7 @@ export function QuestionnaireList({
         if (!scale) return <div>量表数据缺失：{scaleId}</div>;
         const scaleResponses = responses.filter(r => scale.questions.some(q => q.id === r.questionId));
         const scaleProgress = (scaleResponses.length / Math.max(1, scale.questions.length)) * 100;
+        const scaleInstruction = getScaleInstruction(scaleId);
 
         return (
           <Card key={scaleId} className="sri-card">
@@ -241,6 +243,23 @@ export function QuestionnaireList({
                   <Progress value={scaleProgress} className="h-1 w-20 mt-2" />
                 </div>
               </div>
+              {/* 量表指导语 */}
+              {scaleInstruction && (
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-900 font-medium mb-2">📋 {scaleInstruction.title}</p>
+                  <p className="text-sm text-blue-800">{scaleInstruction.instruction}</p>
+                  {scaleInstruction.tips && scaleInstruction.tips.length > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {scaleInstruction.tips.map((tip, i) => (
+                        <li key={i} className="text-xs text-blue-700 flex items-start gap-1">
+                          <span className="mt-0.5">•</span>
+                          <span>{tip}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-6">
               {scale.questions.map((question, idx) => {

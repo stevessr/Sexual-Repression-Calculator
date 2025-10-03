@@ -616,6 +616,46 @@ export default function Results() {
             />
           )}
         </div>
+
+        {/* 心理支持资源 */}
+        <Card className="sri-card mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-psychology-primary" />
+              需要帮助？
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              如果评估结果让您感到焦虑或困扰，或者您发现自己有严重的性心理困扰，以下是一些支持资源：
+            </p>
+            
+            <div className="space-y-3">
+              <div>
+                <h4 className="text-sm font-semibold mb-2 text-psychology-primary">心理咨询热线</h4>
+                <ul className="space-y-1 text-sm text-muted-foreground">
+                  <li>• 全国心理援助热线：<a href="tel:400-161-9995" className="text-psychology-accent hover:underline">400-161-9995</a></li>
+                  <li>• 北京市心理援助热线：<a href="tel:010-82951332" className="text-psychology-accent hover:underline">010-82951332</a></li>
+                  <li>• 上海市心理援助热线：<a href="tel:021-12320" className="text-psychology-accent hover:underline">021-12320-5</a></li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-semibold mb-2 text-psychology-primary">在线心理咨询平台</h4>
+                <ul className="space-y-1 text-sm text-muted-foreground">
+                  <li>• 简单心理：<a href="https://www.jiandanxinli.com" target="_blank" rel="noopener noreferrer" className="text-psychology-accent hover:underline">www.jiandanxinli.com</a></li>
+                  <li>• 壹心理：<a href="https://www.xinli001.com" target="_blank" rel="noopener noreferrer" className="text-psychology-accent hover:underline">www.xinli001.com</a></li>
+                </ul>
+              </div>
+
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-900">
+                  <strong>💡 专业建议：</strong>如果您发现自己有严重的性心理困扰，建议咨询专业的性治疗师或心理咨询师。本评估结果仅供参考，不能替代专业诊断。
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </main>
 
       {/* 移动端浮动分享按钮 */}
