@@ -28,6 +28,20 @@ export default function Assessment() {
   // 状态管理
   const [currentStep, setCurrentStep] = useState<AssessmentStep>('consent');
   const [sessionId, setSessionId] = useState(() => {
+    // If sessionId is provided in URL, prefer it so refresh at same URL keeps the session
+    try {
+      const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+      const sid = params.get('sessionId');
+      if (sid) return sid;
+    } catch (e) {
+      // ignore
+    }
+
+    // For quick assessments we normally generate a new session to avoid resuming old quick sessions.
+    if (assessmentType === 'quick') {
+      return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
     try {
       const raw = localStorage.getItem('sri_assessment_progress');
       if (raw) {
@@ -63,14 +77,17 @@ export default function Assessment() {
       if (!raw) return;
       const parsed = JSON.parse(raw);
       if (!parsed) return;
+      // Only restore previous full-session data for non-quick assessments.
       if (parsed.type && parsed.type !== assessmentType) return; // only restore same type
-
-      if (parsed.sessionId) {
-        setSessionId(parsed.sessionId);
+      if (assessmentType !== 'quick') {
+        if (parsed.sessionId) {
+          setSessionId(parsed.sessionId);
+        }
+        if (parsed.currentStep) setCurrentStep(parsed.currentStep as AssessmentStep);
+        if (parsed.responses) setResponses(parsed.responses as Response[]);
       }
-      if (parsed.currentStep) setCurrentStep(parsed.currentStep as AssessmentStep);
+      // Always restore demographics if present (keep user's basic info)
       if (parsed.demographics) setDemographics(parsed.demographics as Demographics);
-      if (parsed.responses) setResponses(parsed.responses as Response[]);
     } catch (e) {
       console.error('Failed to restore assessment progress', e);
     }

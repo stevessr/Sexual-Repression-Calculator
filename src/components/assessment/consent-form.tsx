@@ -53,7 +53,12 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
     return () => clearTimeout(t);
   }, [agreements]);
 
-  const allAgreed = Object.values(agreements).every(Boolean);
+  // Determine which agreement keys are applicable for this user
+  const applicableKeys: (keyof typeof agreements)[] = isMinor
+    ? ['purpose', 'privacy', 'voluntary', 'nonDiagnostic', 'parentalConsent', 'ageConfirmation']
+    : ['purpose', 'privacy', 'voluntary', 'nonDiagnostic'];
+
+  const allAgreed = applicableKeys.every(k => !!agreements[k]);
 
   const handleAgreementChange = (key: keyof typeof agreements, checked: boolean) => {
     setAgreements(prev => ({ ...prev, [key]: checked }));
