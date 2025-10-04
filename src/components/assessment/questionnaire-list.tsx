@@ -282,7 +282,7 @@ export function QuestionnaireList({
                                 <span key={option.value} className="text-center w-1/5">{option.label}</span>
                               ))}
                             </div>
-                            {selectedOption && <div className="text-center font-medium text-psychology-primary pt-2 text-sm">当前选择: {selectedOption.label}</div>}
+                            {selectedOption && <div className="text-center font-medium text-psychology-primary pt-2 text-sm">当前选择：{selectedOption.label}</div>}
                           </>
                         );
                       })()}
@@ -320,7 +320,7 @@ export function QuestionnaireList({
             </div>
 
             <div className="text-right">
-              <p className="text-sm text-muted-foreground">进度: {Math.round(progress)}%</p>
+              <p className="text-sm text-muted-foreground">进度：{Math.round(progress)}%</p>
               <p className="text-xs text-muted-foreground">{stats.requiredUnanswered > 0 ? `还有 ${stats.requiredUnanswered} 道必答题` : '所有必答题已完成'}</p>
             </div>
           </div>
