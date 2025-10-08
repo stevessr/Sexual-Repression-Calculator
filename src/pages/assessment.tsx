@@ -3,18 +3,28 @@
  * 负责管理整个评估流程，包括知情同意、人口学信息、量表问卷等
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, CheckCircle, ArrowLeft, Home, Brain } from 'lucide-react';
-import { AssessmentSession, Demographics, Response } from '@/types';
-import { calculateAssessmentResults } from '@/lib/calculator';
-import { saveAssessmentSession } from '@/lib/storage';
-import { ConsentForm } from '@/components/assessment/consent-form';
-import { DemographicsForm } from '@/components/assessment/demographics-form';
-import { QuestionnaireSection } from '@/components/assessment/questionnaire-section';
+import React, {useEffect, useRef, useState} from 'react';
+import {useNavigate, useSearchParams} from 'react-router-dom';
+import {Card} from '@/components/ui/card';
+import {Button} from '@/components/ui/button';
+import {Progress} from '@/components/ui/progress';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {AlertTriangle, ArrowLeft, Brain, CheckCircle, Home} from 'lucide-react';
+import {AssessmentSession, Demographics, Response} from '@/types';
+import {calculateAssessmentResults} from '@/lib/calculator';
+import {saveAssessmentSession} from '@/lib/storage';
+import {ConsentForm} from '@/components/assessment/consent-form';
+import {DemographicsForm} from '@/components/assessment/demographics-form';
+import {QuestionnaireSection} from '@/components/assessment/questionnaire-section';
 
 type AssessmentStep = 'consent' | 'demographics' | 'questionnaire' | 'processing' | 'completed';
 
@@ -56,6 +66,194 @@ export default function Assessment() {
   const [demographics, setDemographics] = useState<Demographics | null>(null);
   const [responses, setResponses] = useState<Response[]>([]);
   const [session, setSession] = useState<AssessmentSession | null>(null);
+  const [pendingProgress, setPendingProgress] = useState<{
+    demographics?: Demographics;
+    responses: Response[];
+  } | null>(null);
+  const [showProgressDialog, setShowProgressDialog] = useState(false);
+  const [hasCheckedProgress, setHasCheckedProgress] = useState(false);
+  const closingProgressDialogRef = useRef(false);
+  const [resumeToken, setResumeToken] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (hasCheckedProgress) {
+      return;
+    }
+
+    const savedProgress = localStorage.getItem('sri_assessment_progress');
+    if (!savedProgress) {
+      setHasCheckedProgress(true);
+      return;
+    }
+
+    try {
+      const data = JSON.parse(savedProgress);
+      if (data.type !== assessmentType) {
+        setHasCheckedProgress(true);
+        return;
+      }
+
+      const savedDemographics = data.demographics as Demographics | undefined;
+      type RawResponse = { questionId: string; value: number; timestamp: string };
+      const rawResponses: RawResponse[] = Array.isArray(data.responses) ? data.responses : [];
+      const restoredResponses: Response[] = rawResponses.map(item => ({
+        questionId: item.questionId,
+        value: item.value,
+        timestamp: new Date(item.timestamp),
+      }));
+
+      if (!savedDemographics && restoredResponses.length === 0) {
+        setHasCheckedProgress(true);
+        return;
+      }
+
+      setPendingProgress({
+        demographics: savedDemographics,
+        responses: restoredResponses,
+      });
+      setShowProgressDialog(true);
+      closingProgressDialogRef.current = false;
+      setHasCheckedProgress(true);
+    } catch (error) {
+      console.error('检查保存的进度时出错：', error);
+      setHasCheckedProgress(true);
+    }
+  }, [assessmentType, hasCheckedProgress]);
+
+const handleContinueProgress = () => {
+    if (!pendingProgress) {
+      closingProgressDialogRef.current = false;
+      setShowProgressDialog(false);
+      return;
+    }
+
+    closingProgressDialogRef.current = true;
+
+    const baseSession: AssessmentSession = session ?? {
+      id: sessionId,
+      type: assessmentType,
+      demographics: pendingProgress.demographics ?? ({} as Demographics),
+      responses: [],
+      startTime: new Date(),
+      completed: false,
+    };
+
+    if (pendingProgress.demographics) {
+      setDemographics(pendingProgress.demographics);
+    }
+
+    setResponses(pendingProgress.responses);
+
+    const updatedSession: AssessmentSession = {
+      ...baseSession,
+      demographics: pendingProgress.demographics ?? baseSession.demographics,
+      responses: pendingProgress.responses,
+      completed: false,
+      endTime: undefined,
+    };
+
+    setSession(updatedSession);
+    saveAssessmentSession(updatedSession);
+
+    setCurrentStep('questionnaire');
+    setPendingProgress(null);
+    setShowProgressDialog(false);
+    setResumeToken(Date.now());
+    setHasCheckedProgress(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [currentStep]);
+
+  useEffect(() => {
+    if (hasCheckedProgress) {
+      return;
+    }
+
+    const savedProgress = localStorage.getItem('sri_assessment_progress');
+    if (!savedProgress) {
+      setHasCheckedProgress(true);
+      return;
+    }
+
+    try {
+      const data = JSON.parse(savedProgress);
+      if (data.type !== assessmentType) {
+        setHasCheckedProgress(true);
+        return;
+      }
+
+      const savedDemographics = data.demographics as Demographics | undefined;
+      type RawResponse = { questionId: string; value: number; timestamp: string };
+      const rawResponses: RawResponse[] = Array.isArray(data.responses) ? data.responses : [];
+      const restoredResponses: Response[] = rawResponses.map((item) => ({
+        questionId: item.questionId,
+        value: item.value,
+        timestamp: new Date(item.timestamp),
+      }));
+
+      if (!savedDemographics && restoredResponses.length === 0) {
+        setHasCheckedProgress(true);
+        return;
+      }
+
+      setPendingProgress({
+        demographics: savedDemographics,
+        responses: restoredResponses,
+      });
+      setShowProgressDialog(true);
+      setHasCheckedProgress(true);
+    } catch (error) {
+      console.error('检查保存的进度时出错：', error);
+      setHasCheckedProgress(true);
+    }
+  }, [assessmentType, hasCheckedProgress]);
+
+
+const handleDiscardProgress = () => {
+    closingProgressDialogRef.current = true;
+    localStorage.removeItem('sri_assessment_progress');
+    setPendingProgress(null);
+    setShowProgressDialog(false);
+    setHasCheckedProgress(true);
+    setDemographics(null);
+    setResponses([]);
+    setCurrentStep('consent');
+    setResumeToken(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (session) {
+      setSession({
+        ...session,
+        demographics: {} as Demographics,
+        responses: [],
+        startTime: new Date(),
+        completed: false,
+        endTime: undefined,
+      });
+    }
+  };
+
+const handleProgressDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      if (closingProgressDialogRef.current) {
+        closingProgressDialogRef.current = false;
+        setShowProgressDialog(false);
+        return;
+      }
+
+      if (pendingProgress) {
+        setShowProgressDialog(true);
+        return;
+      }
+    }
+
+    setShowProgressDialog(open);
+  };
 
   // 初始化会话
   useEffect(() => {
@@ -136,7 +334,7 @@ export default function Assessment() {
   }, [assessmentType, sessionId, currentStep, searchParams, setSearchParams]);
 
   // 检测是否为未成年人
-  const isMinorUser = demographics?.age === '0'; // 14-17岁年龄段
+  const isMinorUser = demographics?.age === '0'; // 14-17 岁年龄段
 
   // 处理知情同意
   const handleConsent = (consented: boolean) => {
@@ -145,6 +343,8 @@ export default function Assessment() {
       return;
     }
     setCurrentStep('demographics');
+    // 滚动到顶部以显示完整的人口学信息表单
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // 处理人口学信息提交
@@ -159,6 +359,8 @@ export default function Assessment() {
       saveAssessmentSession(updatedSession);
     }
     setCurrentStep('questionnaire');
+    // 滚动到顶部以显示问卷开始部分
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // 处理问卷回答更新
@@ -244,11 +446,40 @@ export default function Assessment() {
         break;
       default:
         navigate('/');
+        return;
     }
+    // 滚动到顶部
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-psychology-calm via-white to-psychology-warm">
+      <AlertDialog open={showProgressDialog} onOpenChange={handleProgressDialogOpenChange}>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] sm:max-w-sm rounded-xl p-6 space-y-6">
+          <AlertDialogHeader className="space-y-3 text-center">
+            <AlertDialogTitle className="text-xl font-semibold">
+              检测到未完成的评估
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
+              检测到本地保存的未完成评估，已回答 {pendingProgress?.responses.length ?? 0} 道题。请选择继续作答或重新开始。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center gap-2">
+            <AlertDialogCancel
+              onClick={handleDiscardProgress}
+              className="w-full sm:w-auto transition-transform hover:scale-[1.02]"
+            >
+              重新开始
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleContinueProgress}
+              className="w-full sm:w-auto bg-psychology-primary hover:bg-psychology-primary/90 transition-transform hover:scale-[1.02]"
+            >
+              继续作答
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {/* 顶部导航 */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-muted">
         <div className="container mx-auto px-4 py-4">
@@ -334,6 +565,7 @@ export default function Assessment() {
             responses={responses}
             onResponseUpdate={handleResponseUpdate}
             onComplete={handleQuestionnaireComplete}
+            resumeToken={resumeToken}
             onBack={handleBack}
           />
         )}
@@ -388,7 +620,7 @@ export default function Assessment() {
                 <span className="sm:hidden">数据安全保存</span>
               </div>
               <div className="text-xs sm:text-sm text-muted-foreground">
-                已回答: {responses.length} 题
+                已回答：{responses.length} 题
               </div>
             </div>
           </div>

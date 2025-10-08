@@ -126,7 +126,7 @@ export function QuestionCard({
             </div>
             {selectedOption && (
               <div className="text-center font-medium text-psychology-primary pt-2 text-sm">
-                当前选择: {selectedOption.label}
+                当前选择：{selectedOption.label}
               </div>
             )}
           </div>

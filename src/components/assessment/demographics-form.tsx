@@ -80,7 +80,7 @@ export function DemographicsForm({ onSubmit, onBack, initialData }: Demographics
       return;
     }
 
-    // 构建完整的Demographics对象
+    // 构建完整的 Demographics 对象
     const demographics: Demographics = {
       age: formData.age || '',
       gender: formData.gender || '',

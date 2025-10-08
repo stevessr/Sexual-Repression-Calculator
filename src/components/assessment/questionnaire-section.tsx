@@ -1,18 +1,11 @@
-/**
+﻿/**
  * 问卷主界面组件 - 管理整个问卷流程
  * 包括题目展示、进度跟踪、答案保存等核心功能
  */
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, CheckCircle, Flag } from 'lucide-react';
-import { Question, Response, Demographics } from '@/types';
-import { ALL_SCALES, QUICK_ASSESSMENT_SCALES } from '@/lib/scales';
-import { QuestionCard } from './question-card';
-import { QuestionnaireList } from './questionnaire-list';
-import { ProgressIndicator } from './progress-indicator';
+import React from 'react';
+import {Demographics, Response} from '@/types';
+import {QuestionnaireList} from './questionnaire-list';
 
 interface QuestionnaireSectionProps {
   type: 'quick' | 'full';
@@ -21,6 +14,7 @@ interface QuestionnaireSectionProps {
   onResponseUpdate: (responses: Response[]) => void;
   onComplete: () => void;
   onBack?: () => void;
+  resumeToken?: number | null;
 }
 
 export function QuestionnaireSection({
@@ -29,6 +23,7 @@ export function QuestionnaireSection({
   responses,
   onResponseUpdate,
   onComplete,
+  resumeToken,
   onBack
 }: QuestionnaireSectionProps) {
   // 使用新的列表模式显示问卷
@@ -40,6 +35,7 @@ export function QuestionnaireSection({
       onResponseUpdate={onResponseUpdate}
       onComplete={onComplete}
       onBack={onBack}
+      resumeToken={resumeToken}
     />
   );
 

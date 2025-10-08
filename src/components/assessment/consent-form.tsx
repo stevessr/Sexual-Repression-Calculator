@@ -223,7 +223,7 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
                       onCheckedChange={(checked) => handleAgreementChange('ageConfirmation', !!checked)}
                       className="mt-1"
                     />
-                    <span className="flex-1">我确认我的年龄在14-17岁之间，理解这是一个教育性的自我认知工具</span>
+                    <span className="flex-1">我确认我的年龄在 14-17 岁之间，理解这是一个教育性的自我认知工具</span>
                   </label>
                   <label className="flex items-start gap-3 text-sm cursor-pointer p-3 rounded-md hover:bg-muted">
                     <Checkbox 

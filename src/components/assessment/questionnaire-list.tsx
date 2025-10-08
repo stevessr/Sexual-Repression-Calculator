@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, AlertCircle, ArrowLeft, BarChart3 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { CheckCircle, AlertCircle, ArrowLeft, BarChart3, ArrowUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Question, Response, Demographics } from '@/types';
 import {
   ALL_SCALES,
@@ -31,6 +32,108 @@ interface QuestionnaireListProps {
   onResponseUpdate: (responses: Response[]) => void;
   onComplete: () => void;
   onBack?: () => void;
+  resumeToken?: number | null;
+}
+
+// 分页导航组件 - 统一的翻页组件，支持快捷翻页
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+function PaginationNav({ currentPage, totalPages, onPageChange }: PaginationProps) {
+  const canGoPrev = currentPage > 0;
+  const canGoNext = currentPage < totalPages - 1;
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  const goToPrev = () => {
+    if (canGoPrev) {
+      onPageChange(currentPage - 1);
+    }
+  };
+
+  const goToNext = () => {
+    if (canGoNext) {
+      onPageChange(currentPage + 1);
+    }
+  };
+
+  // 当前页变化时，自动滚动到可视区域
+  React.useEffect(() => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const activeButton = container.querySelector(`[data-page="${currentPage}"]`) as HTMLElement;
+
+      if (activeButton) {
+        // 计算按钮相对于容器的位置
+        const containerWidth = container.clientWidth;
+        const buttonLeft = activeButton.offsetLeft;
+        const buttonWidth = activeButton.offsetWidth;
+
+        // 滚动到按钮居中位置
+        container.scrollTo({
+          left: buttonLeft - containerWidth / 2 + buttonWidth / 2,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [currentPage]);
+
+  return (
+    <div className="flex items-center justify-between gap-2 sm:gap-4">
+      <Button
+        variant="outline"
+        onClick={goToPrev}
+        disabled={!canGoPrev}
+        className="flex items-center gap-1 sm:gap-2 transition-all hover:scale-105 disabled:hover:scale-100 shrink-0 h-9 px-2 sm:px-4"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        <span className="hidden sm:inline text-sm">上一页</span>
+      </Button>
+
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        <span className="text-xs sm:text-sm text-muted-foreground shrink-0 hidden md:inline">
+          {currentPage + 1} / {totalPages}
+        </span>
+        {/* 快捷翻页按钮 - 横向滚动容器 */}
+        <div
+          ref={scrollContainerRef}
+          className="flex gap-1 overflow-x-auto overflow-y-hidden flex-1 py-1"
+          style={{ scrollbarWidth: 'thin' }}
+        >
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i}
+              data-page={i}
+              onClick={() => onPageChange(i)}
+              className={`
+                w-8 h-8 rounded text-xs font-medium transition-all duration-200 shrink-0
+                ${i === currentPage
+                  ? 'bg-psychology-primary text-white scale-110 shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-105'
+                }
+              `}
+              aria-label={`第 ${i + 1} 页`}
+              aria-current={i === currentPage ? 'page' : undefined}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Button
+        variant="outline"
+        onClick={goToNext}
+        disabled={!canGoNext}
+        className="flex items-center gap-1 sm:gap-2 transition-all hover:scale-105 disabled:hover:scale-100 shrink-0 h-9 px-2 sm:px-4"
+      >
+        <span className="hidden sm:inline text-sm">下一页</span>
+        <ChevronRight className="w-4 h-4" />
+      </Button>
+    </div>
+  );
 }
 
 export function QuestionnaireList({
@@ -39,7 +142,8 @@ export function QuestionnaireList({
   responses,
   onResponseUpdate,
   onComplete,
-  onBack
+  onBack,
+  resumeToken
 }: QuestionnaireListProps) {
   const [searchParams] = useSearchParams();
   const useDetailed = searchParams.get('detail') === '1' || searchParams.get('detail') === 'true';
@@ -58,31 +162,67 @@ export function QuestionnaireList({
 
   const scaleIds = useMemo(() => getScalesForUser(), [type, demographics, useDetailed]);
   const userGroup = getUserGroupDescription(demographics);
-  const allQuestions = scaleIds.flatMap(scaleId => ALL_SCALES[scaleId]?.questions ?? []);
+  const allQuestions = useMemo(() => scaleIds.flatMap(scaleId => ALL_SCALES[scaleId]?.questions ?? []), [scaleIds]);
 
-  // 当前展示的量表索引（每个量表单独一页）
   const [currentScaleIndex, setCurrentScaleIndex] = useState<number>(0);
   const currentScaleId = scaleIds[currentScaleIndex];
-  // 保留可选的每量表分页状态 if needed later
   const [scalePages, setScalePages] = useState<Record<string, number>>({});
-  // PAGE_SIZE is used for legacy pagination calculations (kept for jump/scroll logic)
   const PAGE_SIZE = 10;
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
+  const resumeHandledRef = useRef<number | null>(null);
 
-  // restore
+  // 监听滚动，显示/隐藏回到顶部按钮
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 组件初始化时恢复进度
   useEffect(() => {
     const raw = localStorage.getItem('sri_assessment_progress');
     if (!raw) return;
     try {
       const data = JSON.parse(raw);
-      if (data?.type === type && data?.scalePages) setScalePages(data.scalePages);
+      if (data?.type === type) {
+        if (data.responses) onResponseUpdate(data.responses);
+        if (data.scalePages) setScalePages(data.scalePages);
+        if (typeof data.currentScaleIndex === 'number') setCurrentScaleIndex(data.currentScaleIndex);
+      }
     } catch (e) {
       console.error(e);
     }
   }, [type]);
 
+  // 跳转到第一个未回答的问题
   useEffect(() => {
-    // ensure every selected scale has a page, but only update if changed
+    if (!resumeToken || resumeHandledRef.current === resumeToken || !allQuestions.length) {
+      return;
+    }
+    resumeHandledRef.current = resumeToken;
+
+    const firstUnanswered = allQuestions.find(q => !responses.some(r => r.questionId === q.id));
+    if (!firstUnanswered) return;
+
+    const owningScaleId = scaleIds.find(sid => ALL_SCALES[sid]?.questions.some(q => q.id === firstUnanswered.id));
+    if (owningScaleId) {
+      const owningScaleIndex = scaleIds.indexOf(owningScaleId);
+      if (owningScaleIndex !== -1 && owningScaleIndex !== currentScaleIndex) {
+        setCurrentScaleIndex(owningScaleIndex);
+      }
+      setTimeout(() => {
+        document.getElementById(`question-${firstUnanswered.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 150);
+    }
+  }, [resumeToken, responses, allQuestions, scaleIds, currentScaleIndex]);
+
+
+  useEffect(() => {
+    // 确保每个选定的量表都有一个页面，但仅在更改时更新
     setScalePages(prev => {
       const next = { ...prev };
       let changed = false;
@@ -92,7 +232,7 @@ export function QuestionnaireList({
           changed = true;
         }
       });
-      // also remove keys for scales that no longer exist
+      // 同时也删除不再存在的量表的键
       Object.keys(next).forEach(k => {
         if (!scaleIds.includes(k)) {
           delete next[k];
@@ -102,24 +242,32 @@ export function QuestionnaireList({
       return changed ? next : prev;
     });
 
-    // clamp currentScaleIndex when scaleIds changes, but only if needed
+    // 当 scaleIds 改变时，限制 currentScaleIndex，但仅在需要时
     const clamped = Math.min(currentScaleIndex, Math.max(0, scaleIds.length - 1));
     if (clamped !== currentScaleIndex) setCurrentScaleIndex(clamped);
-  }, [scaleIds]);
+  }, [scaleIds, currentScaleIndex]);
 
-  // auto save
+  // 自动保存
   useEffect(() => {
     if (responses.length === 0) return;
     const t = setTimeout(() => {
       try {
-        localStorage.setItem('sri_assessment_progress', JSON.stringify({ type, demographics, responses, scalePages, timestamp: new Date().toISOString() }));
+        const saveData = {
+          type,
+          demographics,
+          responses,
+          scalePages,
+          currentScaleIndex,
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('sri_assessment_progress', JSON.stringify(saveData));
         setLastSaved(new Date());
       } catch (e) {
-        console.error(e);
+        console.error('保存进度失败：', e);
       }
-    }, 800);
+    }, 1000); // 1 秒延迟保存
     return () => clearTimeout(t);
-  }, [responses, type, demographics, scalePages]);
+  }, [responses, type, demographics, scalePages, currentScaleIndex]);
 
   const setPageForScale = (scaleId: string, page: number) => setScalePages(prev => ({ ...prev, [scaleId]: Math.max(0, page) }));
 
@@ -144,16 +292,12 @@ export function QuestionnaireList({
     if (stats.requiredUnanswered > 0) {
       const firstUnanswered = allQuestions.find(q => q.required && !responses.some(r => r.questionId === q.id));
       if (firstUnanswered) {
-        // find owning scale and page
-        const owning = scaleIds.find(sid => (ALL_SCALES[sid]?.questions ?? []).some(q => q.id === firstUnanswered.id));
-        if (owning) {
-          const idx = (ALL_SCALES[owning].questions).findIndex(q => q.id === firstUnanswered.id);
-          const targetPage = Math.floor(idx / PAGE_SIZE);
-          setPageForScale(owning, targetPage);
+        const owningScaleId = scaleIds.find(sid => (ALL_SCALES[sid]?.questions ?? []).some(q => q.id === firstUnanswered.id));
+        if (owningScaleId) {
+          const targetScaleIndex = scaleIds.indexOf(owningScaleId);
+          setCurrentScaleIndex(targetScaleIndex);
           setTimeout(() => document.getElementById(`question-${firstUnanswered.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
-          return;
         }
-        document.getElementById(`question-${firstUnanswered.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       alert(`还有 ${stats.requiredUnanswered} 道必答题未完成，请继续填写。`);
       return;
@@ -168,14 +312,23 @@ export function QuestionnaireList({
   const goToNextScale = () => setCurrentScaleIndex(i => Math.min(scaleIds.length - 1, i + 1));
   const goToPrevScale = () => setCurrentScaleIndex(i => Math.max(0, i - 1));
 
-  // quick-jump sidebar actions
-  const jumpToScale = (scaleId: string, page = 0) => {
-    setPageForScale(scaleId, page);
-    // scroll to top of that card after DOM update
-    setTimeout(() => {
-      const firstQ = (ALL_SCALES[scaleId]?.questions ?? [])[page * PAGE_SIZE];
-      if (firstQ) document.getElementById(`question-${firstQ.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 80);
+  // 返回上一步 - 二次确认
+  const handleBack = () => {
+    if (responses.length > 0) {
+      setShowBackConfirm(true);
+    } else {
+      onBack?.();
+    }
+  };
+
+  const confirmBack = () => {
+    setShowBackConfirm(false);
+    onBack?.();
+  };
+
+  // 回到顶部
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -311,28 +464,51 @@ export function QuestionnaireList({
       {/* 底部操作区域 */}
       <Card className="sri-card">
         <CardContent className="p-6">
-          <div className="flex justify-between items-center">
-            <Button variant="outline" onClick={onBack} className="flex items-center gap-2"><ArrowLeft className="w-4 h-4" />返回上一步</Button>
+          <div className="flex justify-between items-center flex-wrap gap-4">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              className="flex items-center gap-2 transition-all hover:scale-105"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              返回上一步
+            </Button>
 
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">请确保所有必答题都已完成</p>
-              <Button onClick={handleComplete} disabled={stats.requiredUnanswered > 0} className="bg-psychology-primary hover:bg-psychology-primary/90 px-8" size="lg">完成评估并查看结果 <CheckCircle className="w-4 h-4 ml-2" /></Button>
+            <div className="text-center flex-1">
+              <p className="text-sm text-muted-foreground mb-2">
+                请确保所有必答题都已完成
+              </p>
+              <Button
+                onClick={handleComplete}
+                disabled={stats.requiredUnanswered > 0}
+                className="bg-psychology-primary hover:bg-psychology-primary/90 px-8 transition-all hover:scale-105"
+                size="lg"
+              >
+                完成评估并查看结果
+                <CheckCircle className="w-4 h-4 ml-2" />
+              </Button>
             </div>
 
             <div className="text-right">
-              <p className="text-sm text-muted-foreground">进度：{Math.round(progress)}%</p>
-              <p className="text-xs text-muted-foreground">{stats.requiredUnanswered > 0 ? `还有 ${stats.requiredUnanswered} 道必答题` : '所有必答题已完成'}</p>
+              <p className="text-sm text-muted-foreground">
+                进度：{Math.round(progress)}%
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {stats.requiredUnanswered > 0
+                  ? `还有 ${stats.requiredUnanswered} 道必答题`
+                  : '所有必答题已完成'
+                }
+              </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* 右侧悬浮快速跳转：自动吸附/隐藏，展开时显示题号网格 */}
+      {/* 右侧悬浮快速跳转 */}
       {(() => {
         const [open, setOpen] = useState(false);
         const panelRef = useRef<HTMLDivElement>(null);
 
-        // 点击页面其他区域自动收起
         useEffect(() => {
           if (!open) return;
           const handler = (e: MouseEvent) => {
@@ -344,7 +520,6 @@ export function QuestionnaireList({
           return () => document.removeEventListener('mousedown', handler);
         }, [open]);
 
-        // 吸附到右侧边缘的小按钮
         return (
           <div className="fixed right-6 top-32 z-50" style={{ pointerEvents: 'auto' }}>
             {!open && (
@@ -354,7 +529,7 @@ export function QuestionnaireList({
                 aria-label="展开快速跳转"
                 onClick={() => setOpen(true)}
               >
-                <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><rect width="20" height="20" rx="6" fill="currentColor"/><text x="10" y="15" textAnchor="middle" fontSize="13" fill="#fff">跳</text></svg>
+                <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><rect width="20" height="20" rx="6" fill="currentColor" /><text x="10" y="15" textAnchor="middle" fontSize="13" fill="#fff">跳</text></svg>
               </button>
             )}
             {open && (
@@ -371,7 +546,7 @@ export function QuestionnaireList({
                     aria-label="收起"
                     onClick={() => setOpen(false)}
                   >
-                    <svg width="16" height="16" viewBox="0 0 16 16"><path d="M4 8h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 16 16"><path d="M4 8h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
                   </button>
                 </div>
                 <div className="grid grid-cols-4 gap-2 max-h-96 overflow-auto">
@@ -381,8 +556,7 @@ export function QuestionnaireList({
                       <button
                         key={q.id}
                         onClick={() => {
-                          const el = document.getElementById(`question-${q.id}`);
-                          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          document.getElementById(`question-${q.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                           setOpen(false);
                         }}
                         aria-label={`跳转到第 ${qi + 1} 题`}
@@ -399,6 +573,53 @@ export function QuestionnaireList({
         );
       })()}
 
+      {/* 回到顶部悬浮按钮 */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="
+            fixed bottom-6 right-6 z-50
+            w-12 h-12 rounded-full
+            bg-psychology-primary text-white
+            shadow-lg hover:shadow-xl
+            flex items-center justify-center
+            transition-all duration-300 ease-out
+            hover:scale-110 active:scale-95
+            animate-in fade-in slide-in-from-bottom-4
+          "
+          aria-label="回到顶部"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
+
+      {/* 返回确认对话框 */}
+      <Dialog open={showBackConfirm} onOpenChange={setShowBackConfirm}>
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-sm">
+          <DialogHeader>
+            <DialogDescription className="text-center text-base pt-4">
+              您确定要离开答题区域吗？
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowBackConfirm(false)}
+              className="transition-all hover:scale-105"
+            >
+              取消
+            </Button>
+            <Button
+              onClick={confirmBack}
+              className="bg-psychology-primary hover:bg-psychology-primary/90 transition-all hover:scale-105"
+            >
+              确认
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 底部说明 */}
       <div className="text-center py-4">
         <p className="text-xs text-muted-foreground max-w-2xl mx-auto">请根据您的真实感受选择最符合的选项。所有回答都将被严格保密，仅用于生成您的个人评估报告。您可以随时修改之前的回答。</p>
       </div>
