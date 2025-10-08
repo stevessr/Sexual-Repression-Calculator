@@ -1,6 +1,6 @@
 /**
- * 主页组件 - 服务暂时关闭页面
- * 显示关闭公告和自动重定向到 GitHub
+ * 主页组件 - 性压抑指数计算器的首页
+ * 提供评估介绍、快速开始入口和功能说明
  */
 
 import React from 'react';
@@ -8,7 +8,6 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Github } from "lucide-react";
 import { 
   Brain, 
   Clock, 
@@ -25,27 +24,8 @@ import {
   Target,
   History
 } from 'lucide-react';
-import { Menu } from 'lucide-react'; // 添加菜单图标
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export default function Home() {
-  const [countdown, setCountdown] = useState(5);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          // 倒计时结束，重定向到GitHub
-          window.location.href = 'https://github.com/';
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-psychology-calm via-white to-psychology-warm">
       {/* 背景装饰 */}
@@ -70,81 +50,25 @@ export default function Home() {
               </div>
             </div>
             
-          {/* 移动端菜单 - 只在小屏幕上显示 */}
-<div className="md:hidden">
-  <Sheet>
-    <SheetTrigger asChild>
-      <Button variant="ghost" size="sm">
-        <Menu className="w-5 h-5" />
-      </Button>
-    </SheetTrigger>
-    <SheetContent side="right">
-      <div className="flex flex-col gap-4 mt-4">
-        <Button variant="ghost" size="sm" asChild className="justify-start">
-          <Link to="/guide" className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4" />
-            使用指南
-          </Link>
-        </Button>
-        <Button variant="ghost" size="sm" asChild className="justify-start">
-          <Link to="/science" className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            科学依据
-          </Link>
-        </Button>
-        <Button variant="ghost" size="sm" asChild className="justify-start">
-          <Link to="/history" className="flex items-center gap-2">
-            <History className="w-4 h-4" />
-            历史记录
-          </Link>
-        </Button>
-        <Button variant="ghost" size="sm" asChild className="justify-start">
-          <a 
-            href="https://github.com/lamos22/Sexual-Repression-Calculator" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-2"
-          >
-            <Github className="w-4 h-4" />
-            GitHub 仓库地址
-          </a>
-        </Button>
-      </div>
-    </SheetContent>
-  </Sheet>
-</div>
-            {/* 桌面端菜单 */}
-            {/* <div className="flex items-center gap-1 sm:gap-4"> */}
-            <div className="hidden md:flex items-center gap-4">
-              <Button variant="ghost" size="sm" asChild className="h-auto py-1.5">
-                <Link to="/guide" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2">
-                  <BookOpen className="w-4 h-4" />
-                  <span className="text-[10px] sm:text-sm">使用指南</span>
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/guide">
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  使用指南
                 </Link>
               </Button>
-              <Button variant="ghost" size="sm" asChild className="h-auto py-1.5">
-                <Link to="/science" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2">
-                  <FileText className="w-4 h-4" />
-                  <span className="text-[10px] sm:text-sm">科学依据</span>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/science">
+                  <FileText className="w-4 h-4 mr-2" />
+                  科学依据
                 </Link>
               </Button>
-              <Button variant="ghost" size="sm" asChild className="h-auto py-1.5">
-                <Link to="/history" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2">
-                  <History className="w-4 h-4" />
-                  <span className="text-[10px] sm:text-sm">历史记录</span>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/history">
+                  <History className="w-4 h-4 mr-2" />
+                  历史记录
                 </Link>
               </Button>
-              {/* GitHub 链接 */}
-  <Button variant="ghost" size="sm" asChild>
-    <a 
-      href="https://github.com/lamos22/Sexual-Repression-Calculator" 
-      target="_blank" 
-      rel="noopener noreferrer"
-      className="flex items-center"
-    >
-      <Github className="w-4 h-4" />
-    </a>
-  </Button>
             </div>
           </div>
         </nav>
@@ -194,7 +118,7 @@ export default function Home() {
                 </Link>
                 
                 <Link to="/assessment?type=full">
-                  <Button size="lg" variant="outline" className="border-psychology-primary text-psychology-primary hover:bg-psychology-primary hover:text-white transition-colors px-8 py-4 text-lg">
+                  <Button size="lg" variant="outline" className="border-psychology-primary text-psychology-primary hover:bg-psychology-primary/5 px-8 py-4 text-lg">
                     <Target className="w-5 h-5 mr-2" />
                     完整版测评
                   </Button>
@@ -341,7 +265,7 @@ export default function Home() {
                   </div>
 
                   <Link to="/assessment?type=full" className="block">
-                    <Button variant="outline" className="w-full border-psychology-secondary text-psychology-secondary hover:bg-psychology-secondary hover:text-white transition-colors">
+                    <Button variant="outline" className="w-full border-psychology-secondary text-psychology-secondary hover:bg-psychology-secondary/5">
                       开始完整测评
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
@@ -445,7 +369,7 @@ export default function Home() {
                     立即开始测评
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" asChild className="border-psychology-primary text-psychology-primary hover:bg-psychology-primary hover:text-white transition-colors px-8 py-4">
+                <Button size="lg" variant="outline" asChild className="border-psychology-primary text-psychology-primary hover:bg-psychology-primary/5 px-8 py-4">
                   <Link to="/guide">
                     <BookOpen className="w-5 h-5 mr-2" />
                     了解更多信息
@@ -499,49 +423,10 @@ export default function Home() {
             </div>
             
             <div className="border-t border-muted mt-8 pt-8 text-center text-sm text-muted-foreground">
-              <p>© 2025 性压抑指数计算器。仅供教育和自我了解使用，不能替代专业心理健康服务。</p>
+              <p>© 2024 性压抑指数计算器。仅供教育和自我了解使用，不能替代专业心理健康服务。</p>
             </div>
           </div>
-        </div>
-
-        {/* 关闭公告 */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-psychology-primary/20 p-12 shadow-lg">
-          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Clock className="w-10 h-10 text-red-600" />
-          </div>
-
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            服务暂时关闭
-          </h1>
-
-          <p className="text-xl text-gray-700 mb-8 leading-relaxed">
-            由于被倒卖，受人委托暂时关闭
-          </p>
-
-          {/* 倒计时显示 */}
-          <div className="bg-psychology-primary/10 rounded-lg p-6 mb-6">
-            <p className="text-lg text-psychology-primary mb-2">
-              页面将在 <span className="font-bold text-2xl">{countdown}</span> 秒后自动跳转到 GitHub
-            </p>
-            <p className="text-sm text-muted-foreground">
-              或您可以直接点击下方链接访问
-            </p>
-          </div>
-
-          {/* 手动跳转按钮 */}
-          <a
-            href="https://github.com/"
-            className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200"
-          >
-            <Brain className="w-5 h-5" />
-            立即跳转到 GitHub
-          </a>
-        </div>
-
-        {/* 底部信息 */}
-        <div className="mt-8 text-sm text-muted-foreground">
-          <p>感谢您的理解和支持</p>
-        </div>
+        </footer>
       </div>
     </div>
   );
