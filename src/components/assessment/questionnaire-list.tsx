@@ -23,7 +23,7 @@ import {
   isInexperienced,
   getUserGroupDescription
 } from '@/lib/scales';
-import { useSearchParams } from 'react-router-dom';
+// (不再基于 URL 参数切换完整版/增量版) 注意：按 sex-main 的实现，full 类型始终使用完整版适应性量表
 
 interface QuestionnaireListProps {
   type: 'quick' | 'full';
@@ -145,12 +145,12 @@ export function QuestionnaireList({
   onBack,
   resumeToken
 }: QuestionnaireListProps) {
-  const [searchParams] = useSearchParams();
-  const useDetailed = searchParams.get('detail') === '1' || searchParams.get('detail') === 'true';
-
   const getScalesForUser = () => {
-    if (type === 'quick') return getAdaptiveScales(demographics);
-    if (useDetailed) {
+    if (type === 'quick') {
+      return getAdaptiveScales(demographics);
+    }
+    // full 类型使用完整版适应性量表
+    if (type === 'full') {
       try {
         return getAdaptiveFullScales(demographics);
       } catch (e) {
@@ -160,7 +160,7 @@ export function QuestionnaireList({
     return INCREMENTAL_ASSESSMENT_SCALES;
   };
 
-  const scaleIds = useMemo(() => getScalesForUser(), [type, demographics, useDetailed]);
+  const scaleIds = useMemo(() => getScalesForUser(), [type, demographics]);
   const userGroup = getUserGroupDescription(demographics);
   const allQuestions = useMemo(() => scaleIds.flatMap(scaleId => ALL_SCALES[scaleId]?.questions ?? []), [scaleIds]);
 

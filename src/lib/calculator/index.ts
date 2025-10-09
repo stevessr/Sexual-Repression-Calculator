@@ -1,6 +1,6 @@
 /**
- * SRI指数计算引擎 - 基于科学心理测量学的核心算法
- * 实现z分数标准化、四维度计算、SRI指数合成等功能
+ * SRI 指数计算引擎 - 基于科学心理测量学的核心算法
+ * 实现 z 分数标准化、四维度计算、SRI 指数合成等功能
  */
 
 import {AssessmentResults, DimensionScores, NormativeData, Response, ScaleScore, SRI_LEVELS, SRIResult} from '@/types';
@@ -8,7 +8,7 @@ import {ALL_SCALES} from '@/lib/scales';
 
 /**
  * 标准正态分布累积分布函数 (CDF)
- * 用于将z分数转换为0-100的百分位数
+ * 用于将 z 分数转换为 0-100 的百分位数
  */
 function normalCDF(x: number): number {
   const a1 = 0.254829592;
@@ -44,7 +44,7 @@ export function calculateRawScore(responses: Response[], scaleId: string): numbe
     scale.questions.some(q => q.id === r.questionId)
   );
   
-  // 如果没有该量表的回答，返回0
+  // 如果没有该量表的回答，返回 0
   if (scaleResponses.length === 0) {
     return 0;
   }
@@ -78,11 +78,11 @@ export function calculateRawScore(responses: Response[], scaleId: string): numbe
 }
 
 /**
- * 计算z分数（标准化分数）
+ * 计算 z 分数（标准化分数）
  * @param rawScore 原始分数
  * @param mean 均值
  * @param stdDev 标准差
- * @returns z分数
+ * @returns z 分数
  */
 export function calculateZScore(rawScore: number, mean: number, stdDev: number): number {
   if (stdDev === 0) return 0;
@@ -107,18 +107,18 @@ export function getDefaultNorms(): NormativeData {
       'sis_ses_full_sis': 87.5,
       'sis_ses_full_ses': 42.8,
       
-      // Mosher性内疚参考均值
+      // Mosher 性内疚参考均值
       'mosher_guilt': 25.6,
       'mosher_guilt_full': 62.7,
       
-      // KISS-9性羞耻参考均值  
+      // KISS-9 性羞耻参考均值  
       'kiss9_shame': 18.7,
       
-      // SOS筛查版参考均值
+      // SOS 筛查版参考均值
       'sos_screening': 15.3,
       'sos_full': 63.0,
       
-      // BSAS性态度量表参考均值
+      // BSAS 性态度量表参考均值
       'bsas_brief': 69.2,
       
       // 适应性量表参考均值
@@ -152,28 +152,28 @@ export function getDefaultNorms(): NormativeData {
 }
 
 /**
- * 计算SIS/SES相关分数
+ * 计算 SIS/SES 相关分数
  * @param responses 用户响应
  * @param norms 常模数据
  * @returns SIS/SES分数对象
  */
 export function calculateSisSeScores(responses: Response[], norms: NormativeData) {
-  // 动态获取SES问题（支持不同量表版本）
+  // 动态获取 SES 问题（支持不同量表版本）
   const sesResponses = responses.filter(r => r.questionId.startsWith('ses_'));
   const sesRaw = sesResponses.reduce((sum, r) => sum + r.value, 0);
   
-  // 动态获取SIS1问题
+  // 动态获取 SIS1 问题
   const sis1Responses = responses.filter(r => r.questionId.startsWith('sis1_'));
   const sis1Raw = sis1Responses.reduce((sum, r) => sum + r.value, 0);
   
-  // 动态获取SIS2问题
+  // 动态获取 SIS2 问题
   const sis2Responses = responses.filter(r => r.questionId.startsWith('sis2_'));
   const sis2Raw = sis2Responses.reduce((sum, r) => sum + r.value, 0);
   
-  // SIS总分
+  // SIS 总分
   const sisTotal = sis1Raw + sis2Raw;
   
-  // 根据题目数量调整常模（快测版vs完整版）
+  // 根据题目数量调整常模（快测版 vs 完整版）
   const sesCount = sesResponses.length;
   const sisCount = sis1Responses.length + sis2Responses.length;
   
@@ -212,11 +212,11 @@ export function calculateDimensionScores(responses: Response[], norms: Normative
   // 尝试完整版SOS
   const sosFullResponses = responses.filter(r => r.questionId.startsWith('sos_'));
   if (sosFullResponses.length > 5) {
-    // 完整版SOS
+    // 完整版 SOS
     sosRaw = sosFullResponses.reduce((sum, r) => sum + r.value, 0);
     sosZ = calculateZScore(sosRaw, norms.means['sos_full'] || 63.0, norms.standardDeviations['sos_full'] || 12.8);
   } else if (sosFullResponses.length > 0) {
-    // 筛查版SOS
+    // 筛查版 SOS
     sosRaw = sosFullResponses.reduce((sum, r) => sum + r.value, 0);
     sosZ = calculateZScore(sosRaw, norms.means['sos_screening'] || 15.3, norms.standardDeviations['sos_screening'] || 4.6);
   }
@@ -227,22 +227,22 @@ export function calculateDimensionScores(responses: Response[], norms: Normative
   
   const guiltResponses = responses.filter(r => r.questionId.startsWith('mg_'));
   if (guiltResponses.length > 10) {
-    // 完整版Mosher
+    // 完整版 Mosher
     guiltRaw = guiltResponses.reduce((sum, r) => sum + r.value, 0);
     guiltZ = calculateZScore(guiltRaw, norms.means['mosher_guilt_full'] || 62.7, norms.standardDeviations['mosher_guilt_full'] || 19.2);
   } else if (guiltResponses.length > 0) {
-    // 简版Mosher
+    // 简版 Mosher
     guiltRaw = guiltResponses.reduce((sum, r) => sum + r.value, 0);
     guiltZ = calculateZScore(guiltRaw, norms.means['mosher_guilt'] || 25.6, norms.standardDeviations['mosher_guilt'] || 7.8);
   }
   
-  // 3. 性羞耻分数（KISS-9保持不变，或者青少年性态度量表）
+  // 3. 性羞耻分数（KISS-9 保持不变，或者青少年性态度量表）
   let shameZ = 0;
   const shameResponses = responses.filter(r => r.questionId.startsWith('ks_'));
   const teenAttitudeResponses = responses.filter(r => r.questionId.startsWith('tsa_'));
   
   if (shameResponses.length > 0) {
-    // 使用KISS-9量表
+    // 使用 KISS-9 量表
     const shameRaw = shameResponses.reduce((sum, r) => sum + r.value, 0);
     shameZ = calculateZScore(shameRaw, norms.means['kiss9_shame'] || 18.7, norms.standardDeviations['kiss9_shame'] || 6.4);
   } else if (teenAttitudeResponses.length > 0) {
@@ -251,7 +251,7 @@ export function calculateDimensionScores(responses: Response[], norms: Normative
     shameZ = calculateZScore(teenRaw, norms.means['teen_sexual_attitudes'] || 25.0, norms.standardDeviations['teen_sexual_attitudes'] || 6.2);
   }
   
-  // 4. SIS相对SES优势（或性认知适应版）
+  // 4. SIS 相对 SES 优势（或性认知适应版）
   let sisOverSes = 0;
   const sexCognitionResponses = responses.filter(r => r.questionId.startsWith('sc_'));
   const sisAdaptedResponses = responses.filter(r => r.questionId.startsWith('sisa_'));
@@ -268,13 +268,13 @@ export function calculateDimensionScores(responses: Response[], norms: Normative
       sisOverSes = calculateZScore(totalRaw, mean, std);
     }
   } else {
-    // 标准SIS/SES计算
+    // 标准 SIS/SES 计算
     const sisSeScores = calculateSisSeScores(responses, norms);
     sisOverSes = sisSeScores.sisOverSes;
   }
   
   return {
-    sosReversed: sosZ, // SOS反向（越高越恐惧）
+    sosReversed: sosZ, // SOS 反向（越高越恐惧）
     sexGuilt: guiltZ,
     sexualShame: shameZ,
     sisOverSes: sisOverSes
@@ -282,20 +282,20 @@ export function calculateDimensionScores(responses: Response[], norms: Normative
 }
 
 /**
- * 计算SRI指数（0-100）
+ * 计算 SRI 指数（0-100）
  * @param dimensionScores 四维度分数
- * @returns SRI结果对象
+ * @returns SRI 结果对象
  */
 export function calculateSRI(dimensionScores: DimensionScores): SRIResult {
-  // 等权重合成四维度z分数
+  // 等权重合成四维度 z 分数
   const compositeZ = (dimensionScores.sosReversed + dimensionScores.sexGuilt + 
                     dimensionScores.sexualShame + dimensionScores.sisOverSes) / 4;
   
-  // 转换为0-100分数（使用标准正态CDF）
+  // 转换为 0-100 分数（使用标准正态 CDF）
   const percentile = normalCDF(compositeZ) * 100;
   const totalScore = Math.round(Math.max(0, Math.min(100, percentile)));
   
-  // 确定SRI等级
+  // 确定 SRI 等级
   let level: keyof typeof SRI_LEVELS = 'moderate';
   let found = false;
   for (const [levelKey, levelData] of Object.entries(SRI_LEVELS)) {
@@ -322,9 +322,9 @@ export function calculateSRI(dimensionScores: DimensionScores): SRIResult {
 }
 
 /**
- * 主要的SRI计算函数
+ * 主要的 SRI 计算函数
  * @param responses 用户所有响应
- * @param sessionId 会话ID
+ * @param sessionId 会话 ID
  * @param norms 常模数据（可选）
  * @returns 完整的评估结果
  */
@@ -371,7 +371,7 @@ export function calculateAssessmentResults(
   // 计算四维度分数
   const dimensionScores = calculateDimensionScores(responses, normsData);
   
-  // 计算SRI指数
+  // 计算 SRI 指数
   const sri = calculateSRI(dimensionScores);
   sri.scaleScores = scaleScores;
   
@@ -390,7 +390,7 @@ export function calculateAssessmentResults(
 
 /**
  * 生成结果解释文案
- * @param sri SRI结果
+ * @param sri SRI 结果
  * @returns 解释文案数组
  */
 function generateInterpretation(sri: SRIResult): string[] {
@@ -431,7 +431,7 @@ function getInterpretationByLevel(level: keyof typeof SRI_LEVELS): string {
 
 /**
  * 生成个性化建议
- * @param sri SRI结果
+ * @param sri SRI 结果
  * @returns 建议文案数组
  */
 function generateRecommendations(sri: SRIResult): string[] {

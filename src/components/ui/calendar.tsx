@@ -64,4 +64,4 @@ function Calendar({
   )
 }
 
-export type CalendarProps = {};
+// 已在文件开头导出 DayPicker 的 props 类型，移除重复导出

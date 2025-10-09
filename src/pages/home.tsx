@@ -3,7 +3,7 @@
  * 提供评估介绍、快速开始入口和功能说明
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,9 +23,30 @@ import {
   BookOpen,
   Target,
   History
+  ,X
 } from 'lucide-react';
 
 export default function Home() {
+  const [showNotice, setShowNotice] = useState(true);
+
+  useEffect(() => {
+    try {
+      const closed = localStorage.getItem('sri_home_notice_closed') === '1';
+      if (closed) setShowNotice(false);
+    } catch (e) {
+      // ignore (e.g., SSR)
+    }
+  }, []);
+
+  const closeNotice = () => {
+    try {
+      localStorage.setItem('sri_home_notice_closed', '1');
+    } catch (e) {
+      // ignore
+    }
+    setShowNotice(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-psychology-calm via-white to-psychology-warm">
       {/* 背景装饰 */}
@@ -72,6 +93,40 @@ export default function Home() {
             </div>
           </div>
         </nav>
+        {/* 通知栏（可关闭） */}
+        {showNotice && (
+          <div className="container mx-auto px-4">
+            <div className="mx-4 mt-4">
+              <div className="relative rounded-2xl shadow-2xl overflow-hidden" style={{ backgroundColor: 'rgb(0,0,0)' }}>
+                <div className="px-5 py-4 pr-12">
+                  <div className="flex flex-col gap-2 text-sm font-medium leading-relaxed">
+                    <div style={{ color: 'rgb(255,255,255)' }}>性压抑指数计算器完全免费</div>
+                    <div className="inline-flex items-center gap-1">
+                      <span className="px-2 py-0.5 rounded" style={{ backgroundColor: 'rgb(255,153,0)', color: 'rgb(0,0,0)' }}>
+                        如果支付所谓链接免费但<span className="font-bold">「人工整合费用」</span>，请立即退款，以免助长违法商家嚣张气焰
+                      </span>
+                    </div>
+                    <div className="text-xs cursor-pointer hover:underline" style={{ color: 'rgb(255,255,255)' }} onClick={() => { /* TODO: feedback modal */ }}>
+                      如果此网址链接是您购买得来，轻触此区域可反馈，将会联系违法店铺下架或追诉。
+                    </div>
+                  </div>
+                </div>
+                <button
+                  className="absolute top-3 right-3 p-1.5 rounded-full transition-colors"
+                  aria-label="关闭通知"
+                  style={{ color: 'rgb(255,255,255)' }}
+                  onClick={closeNotice}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <div className="flex justify-center pb-2 pt-1 cursor-grab active:cursor-grabbing">
+                  <div className="w-10 h-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.4)' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 主要内容区域 */}
         <main className="container mx-auto px-4 pb-20">
