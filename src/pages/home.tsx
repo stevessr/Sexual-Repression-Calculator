@@ -93,35 +93,47 @@ export default function Home() {
             </div>
           </div>
         </nav>
-        {/* 通知栏（可关闭） */}
+        {/* 悬浮通知（可关闭） */}
         {showNotice && (
-          <div className="container mx-auto px-4">
-            <div className="mx-4 mt-4">
-              <div className="relative rounded-2xl shadow-2xl overflow-hidden" style={{ backgroundColor: 'rgb(0,0,0)' }}>
-                <div className="px-5 py-4 pr-12">
-                  <div className="flex flex-col gap-2 text-sm font-medium leading-relaxed">
-                    <div style={{ color: 'rgb(255,255,255)' }}>性压抑指数计算器完全免费</div>
-                    <div className="inline-flex items-center gap-1">
-                      <span className="px-2 py-0.5 rounded" style={{ backgroundColor: 'rgb(255,153,0)', color: 'rgb(0,0,0)' }}>
-                        如果支付所谓链接免费但<span className="font-bold">「人工整合费用」</span>，请立即退款，以免助长违法商家嚣张气焰
-                      </span>
-                    </div>
-                    <div className="text-xs cursor-pointer hover:underline" style={{ color: 'rgb(255,255,255)' }} onClick={() => { /* TODO: feedback modal */ }}>
-                      如果此网址链接是您购买得来，轻触此区域可反馈，将会联系违法店铺下架或追诉。
+          <div
+            className="fixed top-6 left-1/2 z-50 transform -translate-x-1/2"
+            aria-live="polite"
+            role="status"
+          >
+            <div className="w-[min(95vw,720px)] mx-auto px-4">
+              <div className="mx-4">
+                <div className="relative rounded-2xl shadow-2xl overflow-hidden" style={{ backgroundColor: 'rgb(0,0,0)' }}>
+                  <div className="px-5 py-4 pr-12">
+                    <div className="flex flex-col gap-2 text-sm font-medium leading-relaxed">
+                      <div style={{ color: 'rgb(255,255,255)' }}>性压抑指数计算器完全免费</div>
+                      <div className="inline-flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded" style={{ backgroundColor: 'rgb(255,153,0)', color: 'rgb(0,0,0)' }}>
+                          如果支付所谓链接免费但<span className="font-bold">「人工整合费用」</span>，请立即退款，以免助长违法商家嚣张气焰
+                        </span>
+                      </div>
+                      <a
+                        href="https://kcnyvaj540jn.feishu.cn/share/base/form/shrcnFXbyBDDBdWKbFXj8TGKXme"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs inline-block hover:underline"
+                        style={{ color: 'rgb(255,255,255)' }}
+                      >
+                        如果此网址链接是您购买得来，轻触此区域可反馈，将会联系违法店铺下架或追诉。
+                      </a>
                     </div>
                   </div>
-                </div>
-                <button
-                  className="absolute top-3 right-3 p-1.5 rounded-full transition-colors"
-                  aria-label="关闭通知"
-                  style={{ color: 'rgb(255,255,255)' }}
-                  onClick={closeNotice}
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                  <button
+                    className="absolute top-3 right-3 p-1.5 rounded-full transition-colors hover:bg-white/10"
+                    aria-label="关闭通知"
+                    style={{ color: 'rgb(255,255,255)' }}
+                    onClick={closeNotice}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
 
-                <div className="flex justify-center pb-2 pt-1 cursor-grab active:cursor-grabbing">
-                  <div className="w-10 h-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.4)' }} />
+                  <div className="flex justify-center pb-2 pt-1 cursor-grab active:cursor-grabbing">
+                    <div className="w-10 h-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.4)' }} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -479,6 +491,19 @@ export default function Home() {
             
             <div className="border-t border-muted mt-8 pt-8 text-center text-sm text-muted-foreground">
               <p>© 2024 性压抑指数计算器。仅供教育和自我了解使用，不能替代专业心理健康服务。</p>
+              <p className="mt-2">
+                源代码以 MIT 格式授权，请
+                {' '}
+                <a
+                  href="https://github.com/lamos22/Sexual-Repression-Calculator"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  点击查看仓库
+                </a>
+                。
+              </p>
             </div>
           </div>
         </footer>
