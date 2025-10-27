@@ -50,7 +50,7 @@ export const SIS_SES_SF: Scale = {
     },
     {
       id: 'sis1_2',
-      text: '除非我确信不会让伴侣失望，否则我很难放松享受性生活',
+      text: '我担心性表现不好会让伴侣失望，这让我难以放松',
       scale: 'sis_ses_sf',
       type: 'likert',
       options: Object.values(LIKERT_OPTIONS),
@@ -58,7 +58,7 @@ export const SIS_SES_SF: Scale = {
     },
     {
       id: 'sis1_3',
-      text: '当我想到可能无法满足伴侣时，我会失去性兴趣',
+      text: '担心无法满足伴侣会降低我的性兴趣',
       scale: 'sis_ses_sf',
       type: 'likert',
       options: Object.values(LIKERT_OPTIONS),
@@ -66,7 +66,7 @@ export const SIS_SES_SF: Scale = {
     },
     {
       id: 'sis1_4',
-      text: '如果我担心自己的性表现，我就很难专注于性快感',
+      text: '担心性表现会让我难以专注于性快感',
       scale: 'sis_ses_sf',
       type: 'likert',
       options: Object.values(LIKERT_OPTIONS),
@@ -244,7 +244,7 @@ export const SIS_SES_FULL: Scale = {
     },
     {
       id: 'sis1_7',
-      text: '除非我确信伴侣对我有性吸引力，否则我很难专注于自己的快感',
+      text: '我需要确信伴侣对我有性吸引力，才能专注于自己的快感',
       scale: 'sis_ses_full',
       type: 'likert',
       options: Object.values(LIKERT_OPTIONS),
@@ -252,7 +252,7 @@ export const SIS_SES_FULL: Scale = {
     },
     {
       id: 'sis1_8',
-      text: '如果我担心我的性表现会如何被评判，我会失去性兴奋',
+      text: '担心性表现会如何被评判会让我失去性兴奋',
       scale: 'sis_ses_full',
       type: 'likert',
       options: Object.values(LIKERT_OPTIONS),
@@ -260,7 +260,7 @@ export const SIS_SES_FULL: Scale = {
     },
     {
       id: 'sis1_9',
-      text: '除非我觉得自己在性方面有能力，否则我无法享受性',
+      text: '我需要觉得自己在性方面有能力，才能享受性',
       scale: 'sis_ses_full',
       type: 'likert',
       options: Object.values(LIKERT_OPTIONS),

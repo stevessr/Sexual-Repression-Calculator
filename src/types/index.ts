@@ -151,18 +151,18 @@ export const SRI_LEVELS = {
 
 // 李克特量表选项
 export const LIKERT_OPTIONS = {
-  STRONGLY_DISAGREE: { value: 1, label: '非常不同意' },
-  DISAGREE: { value: 2, label: '不同意' },
-  NEUTRAL: { value: 3, label: '中性' },
-  AGREE: { value: 4, label: '同意' },
-  STRONGLY_AGREE: { value: 5, label: '非常同意' }
+  STRONGLY_DISAGREE: { value: 1, label: '完全不同意' },
+  DISAGREE: { value: 2, label: '比较不同意' },
+  NEUTRAL: { value: 3, label: '不确定或中立' },
+  AGREE: { value: 4, label: '比较同意' },
+  STRONGLY_AGREE: { value: 5, label: '完全同意' }
 } as const;
 
 // 频率选项
 export const FREQUENCY_OPTIONS = {
-  NEVER: { value: 1, label: '从不' },
-  RARELY: { value: 2, label: '很少' },
-  SOMETIMES: { value: 3, label: '有时' },
-  OFTEN: { value: 4, label: '经常' },
-  ALWAYS: { value: 5, label: '总是' }
+  NEVER: { value: 1, label: '从不（0次）' },
+  RARELY: { value: 2, label: '偶尔（少数时候）' },
+  SOMETIMES: { value: 3, label: '有时（一些时候）' },
+  OFTEN: { value: 4, label: '经常（多数时候）' },
+  ALWAYS: { value: 5, label: '总是（几乎全部时候）' }
 } as const;

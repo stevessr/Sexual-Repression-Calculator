@@ -10,6 +10,7 @@ export * from './kiss9_shame';
 export * from './sos';
 export * from './bsas_brief';
 export * from './demographics_questions';
+export * from './scale-instructions';
 
 // Explicit aggregated exports for app flows
 import {

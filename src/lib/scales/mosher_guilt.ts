@@ -5,8 +5,8 @@ export const MOSHER_GUILT: Scale = {
   name: 'Mosher性内疚量表',
   description: 'Mosher开发的性内疚量表，测量性相关的内疚感和道德负担',
   questions: [
-    { id: 'mg_1', text: '性是某种肮脏的东西', scale: 'mosher_guilt', type: 'likert', options: Object.values(LIKERT_OPTIONS), required: true },
-    { id: 'mg_2', text: '自慰是有害的', scale: 'mosher_guilt', type: 'likert', options: Object.values(LIKERT_OPTIONS), required: true },
+    { id: 'mg_1', text: '我觉得性是不洁净的、令人羞耻的', scale: 'mosher_guilt', type: 'likert', options: Object.values(LIKERT_OPTIONS), required: true },
+    { id: 'mg_2', text: '我认为自我性行为是不健康的', scale: 'mosher_guilt', type: 'likert', options: Object.values(LIKERT_OPTIONS), required: true },
     { id: 'mg_3', text: '只有在婚姻中性行为才是道德的', scale: 'mosher_guilt', type: 'likert', options: Object.values(LIKERT_OPTIONS), required: true },
     { id: 'mg_4', text: '有性欲望让我感到内疚', scale: 'mosher_guilt', type: 'likert', options: Object.values(LIKERT_OPTIONS), required: true },
     { id: 'mg_5', text: '性幻想是错误的', scale: 'mosher_guilt', type: 'likert', options: Object.values(LIKERT_OPTIONS), required: true },
