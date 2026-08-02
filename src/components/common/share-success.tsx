@@ -89,10 +89,10 @@ export function ShareSuccess({ show, onClose, platform }: ShareSuccessProps) {
           <div className="bg-green-50 rounded-lg p-4">
             <div className="flex items-center justify-center gap-2 text-green-700">
               <Users className="w-5 h-5" />
-              <span className="font-medium">帮助更多人了解心理健康</span>
+              <span className="font-medium">帮助更多人了解性健康</span>
             </div>
             <p className="text-sm text-green-600 mt-1">
-              您的分享可能会帮助朋友更好地认识自己
+              您的分享可能会帮助朋友更好地认识自己的回答模式
             </p>
           </div>
           

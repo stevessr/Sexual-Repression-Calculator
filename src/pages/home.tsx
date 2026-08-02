@@ -3,7 +3,6 @@
  * 提供评估介绍、快速开始入口和功能说明
  */
 
-import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,29 +22,9 @@ import {
   BookOpen,
   Target,
   History
-  ,X
 } from 'lucide-react';
 
 export default function Home() {
-  const [showNotice, setShowNotice] = useState(true);
-
-  useEffect(() => {
-    try {
-      const closed = localStorage.getItem('sri_home_notice_closed') === '1';
-      if (closed) setShowNotice(false);
-    } catch (e) {
-      // ignore (e.g., SSR)
-    }
-  }, []);
-
-  const closeNotice = () => {
-    try {
-      localStorage.setItem('sri_home_notice_closed', '1');
-    } catch (e) {
-      // ignore
-    }
-    setShowNotice(false);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-psychology-calm via-white to-psychology-warm">
@@ -93,52 +72,6 @@ export default function Home() {
             </div>
           </div>
         </nav>
-        {/* 悬浮通知（可关闭） */}
-        {showNotice && (
-          <div
-            className="fixed top-6 left-1/2 z-50 transform -translate-x-1/2"
-            aria-live="polite"
-            role="status"
-          >
-            <div className="w-[min(95vw,720px)] mx-auto px-4">
-              <div className="mx-4">
-                <div className="relative rounded-2xl shadow-2xl overflow-hidden" style={{ backgroundColor: 'rgb(0,0,0)' }}>
-                  <div className="px-5 py-4 pr-12">
-                    <div className="flex flex-col gap-2 text-sm font-medium leading-relaxed">
-                      <div style={{ color: 'rgb(255,255,255)' }}>性压抑指数计算器完全免费</div>
-                      <div className="inline-flex items-center gap-1">
-                        <span className="px-2 py-0.5 rounded" style={{ backgroundColor: 'rgb(255,153,0)', color: 'rgb(0,0,0)' }}>
-                          如果支付所谓链接免费但<span className="font-bold">「人工整合费用」</span>，请立即退款，以免助长违法商家嚣张气焰
-                        </span>
-                      </div>
-                      <a
-                        href="https://kcnyvaj540jn.feishu.cn/share/base/form/shrcnFXbyBDDBdWKbFXj8TGKXme"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs inline-block hover:underline"
-                        style={{ color: 'rgb(255,255,255)' }}
-                      >
-                        如果此网址链接是您购买得来，轻触此区域可反馈，将会联系违法店铺下架或追诉。
-                      </a>
-                    </div>
-                  </div>
-                  <button
-                    className="absolute top-3 right-3 p-1.5 rounded-full transition-colors hover:bg-white/10"
-                    aria-label="关闭通知"
-                    style={{ color: 'rgb(255,255,255)' }}
-                    onClick={closeNotice}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-
-                  <div className="flex justify-center pb-2 pt-1 cursor-grab active:cursor-grabbing">
-                    <div className="w-10 h-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.4)' }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* 主要内容区域 */}
         <main className="container mx-auto px-4 pb-20">
@@ -147,7 +80,7 @@ export default function Home() {
             <div className="max-w-4xl mx-auto">
               <Badge className="mb-6 bg-psychology-primary/10 text-psychology-primary border-psychology-primary/20">
                 <Heart className="w-4 h-4 mr-2" />
-                基于科学研究的心理测评工具
+                研究参考的性健康自我反思工具
               </Badge>
               
               <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-psychology-primary via-psychology-secondary to-psychology-accent bg-clip-text text-transparent">
@@ -155,8 +88,8 @@ export default function Home() {
               </h1>
               
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed max-w-3xl mx-auto">
-                专业的性心理健康自我评估工具，基于多个经过验证的心理测量量表，
-                帮助您科学地了解自己的性心理特征，促进性健康和亲密关系的发展。
+                面向性健康教育与自我反思的本地测评工具，参考性兴奋/抑制研究以及现行性健康框架，
+                帮助您观察困扰、回避、同意、边界与支持环境；不替代专业诊断。
               </p>
               
               {/* 适应性评估亮点 */}
@@ -168,8 +101,8 @@ export default function Home() {
                   <div className="text-left">
                     <h3 className="font-semibold text-psychology-primary mb-2">智能适应性评估</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      系统会根据您的年龄段和个人背景自动选择最适合的量表组合，为 14-17 岁青少年提供专门的保护机制，
-                      为无性经验用户提供文化敏感的评估内容，确保每个人都能获得准确和适宜的评估体验。
+                      系统会根据您的年龄段和个人背景自动选择合适的题目组合，为 14-17 岁青少年提供专门的保护机制，
+                      为无性经验用户提供文化敏感的评估内容，帮助每个人获得更合适的自我反思体验。
                     </p>
                   </div>
                 </div>
@@ -214,8 +147,8 @@ export default function Home() {
                 
                 <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-psychology-success/10">
                   <Users className="w-8 h-8 text-psychology-success mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-psychology-success">科学</div>
-                  <div className="text-sm text-muted-foreground">研究验证</div>
+                  <div className="text-2xl font-bold text-psychology-success">研究</div>
+                  <div className="text-sm text-muted-foreground">参考而非诊断</div>
                 </div>
               </div>
             </div>
@@ -251,7 +184,7 @@ export default function Home() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-green-500" />
-                      <span className="text-sm">SIS/SES-SF 14 项量表</span>
+                      <span className="text-sm">SIS/SES-SF 14 项研究构念题目</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-green-500" />
@@ -259,11 +192,15 @@ export default function Home() {
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-green-500" />
-                      <span className="text-sm">KISS-9 性羞耻量表</span>
+                      <span className="text-sm">KISS-9 性羞耻构念题目</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-green-500" />
-                      <span className="text-sm">SOS 性观感筛查版</span>
+                      <span className="text-sm">SOS 性观感研究构念题目</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <span className="text-sm">性健康与困扰自评 10 项（不计入 SRI）</span>
                     </div>
                   </div>
 
@@ -274,7 +211,7 @@ export default function Home() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">题目数量</span>
-                      <span className="text-sm text-psychology-primary font-bold">33-42 题</span>
+                      <span className="text-sm text-psychology-primary font-bold">43-52 题</span>
                     </div>
                   </div>
 
@@ -296,7 +233,7 @@ export default function Home() {
                     </div>
                     <div>
                       <CardTitle className="text-xl text-psychology-secondary">完整测评版</CardTitle>
-                      <p className="text-sm text-muted-foreground">更全面深入的专业分析</p>
+                      <p className="text-sm text-muted-foreground">更全面的研究构念与情境自评</p>
                     </div>
                   </div>
                 </CardHeader>
@@ -304,11 +241,11 @@ export default function Home() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-green-500" />
-                      <span className="text-sm">完整版 SIS/SES 量表</span>
+                      <span className="text-sm">完整版 SIS/SES 研究构念题目</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-green-500" />
-                      <span className="text-sm">完整 Mosher 性内疚量表</span>
+                      <span className="text-sm">Mosher 性内疚构念题目</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-green-500" />
@@ -316,7 +253,11 @@ export default function Home() {
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-green-500" />
-                      <span className="text-sm">BSAS 性态度量表校标</span>
+                      <span className="text-sm">BSAS 性态度研究构念题目</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <span className="text-sm">性健康与困扰自评 10 项（不计入 SRI）</span>
                     </div>
                   </div>
 
@@ -327,7 +268,7 @@ export default function Home() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">题目数量</span>
-                      <span className="text-sm text-psychology-secondary font-bold">58-126 题</span>
+                      <span className="text-sm text-psychology-secondary font-bold">68-136 题</span>
                     </div>
                   </div>
 
@@ -345,9 +286,8 @@ export default function Home() {
           {/* 科学性说明 */}
           <section className="mb-20">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-foreground mb-4">科学可靠的评估基础</h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                基于国际认可的心理测量学量表，经过严格验证的科学工具
+                参考 WHO、CDC、ICD-11、DSM-5-TR 与性反应双控制模型；本中文题库仍需独立信效度研究，结果不构成医学诊断
               </p>
             </div>
 
@@ -368,7 +308,7 @@ export default function Home() {
                     <Heart className="w-8 h-8 text-purple-600" />
                   </div>
                   <h3 className="font-semibold mb-2">性内疚测量</h3>
-                  <p className="text-sm text-muted-foreground">采用 Mosher 性内疚量表，评估性相关的内疚感和道德负担</p>
+                  <p className="text-sm text-muted-foreground">参考 Mosher 性内疚研究构念，帮助观察性相关的内疚感和道德负担</p>
                 </CardContent>
               </Card>
 
@@ -378,7 +318,7 @@ export default function Home() {
                     <Shield className="w-8 h-8 text-orange-600" />
                   </div>
                   <h3 className="font-semibold mb-2">性羞耻评估</h3>
-                  <p className="text-sm text-muted-foreground">使用 KISS-9 量表测量性相关的羞耻体验和自我接纳</p>
+                  <p className="text-sm text-muted-foreground">参考 KISS-9 相关研究构念，帮助观察性相关的羞耻体验和自我接纳</p>
                 </CardContent>
               </Card>
 
@@ -388,7 +328,7 @@ export default function Home() {
                     <Brain className="w-8 h-8 text-green-600" />
                   </div>
                   <h3 className="font-semibold mb-2">性观感调查</h3>
-                  <p className="text-sm text-muted-foreground">SOS 量表评估对性刺激的情绪取向和接近回避倾向</p>
+                  <p className="text-sm text-muted-foreground">参考 SOS 研究构念，帮助观察对性刺激的情绪取向和接近回避倾向</p>
                 </CardContent>
               </Card>
             </div>
@@ -425,9 +365,9 @@ export default function Home() {
           {/* CTA 区域 */}
           <section className="text-center">
             <div className="max-w-3xl mx-auto">
-              <h2 className="text-3xl font-bold mb-4">准备好开始您的性心理健康之旅了吗？</h2>
+              <h2 className="text-3xl font-bold mb-4">准备好开始性健康自我反思了吗？</h2>
               <p className="text-lg text-muted-foreground mb-8">
-                通过科学的自我评估，更好地了解自己，促进健康的性心理发展和亲密关系。
+                通过结构化的回答回顾自己的体验与环境，了解哪些问题值得进一步关注或讨论。
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/assessment?type=quick">
@@ -457,7 +397,7 @@ export default function Home() {
                   <span className="font-bold text-psychology-primary">SRI Calculator</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  基于科学研究的性压抑指数计算器，帮助您更好地了解自己的性心理健康。
+                  面向性健康教育和自我反思，帮助您观察自己的回答模式与支持环境。
                 </p>
               </div>
               

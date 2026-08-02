@@ -64,7 +64,7 @@ export default function Guide() {
             使用指南
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            详细了解如何正确使用性压抑指数(SRI)评估工具，获得准确可靠的测评结果
+            了解如何使用 SRI 进行自我反思；结果用于观察回答模式，不是诊断或“准确率”结论
           </p>
         </div>
 
@@ -93,11 +93,11 @@ export default function Guide() {
                     </div>
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-psychology-secondary" />
-                      <span>39 道核心题目</span>
+                      <span>约 43-52 道题（含 10 道情境自评）</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-psychology-success" />
-                      <span>涵盖四个核心维度</span>
+                      <span>涵盖四个研究维度与近四周情境</span>
                     </div>
                   </div>
                 </div>
@@ -115,11 +115,11 @@ export default function Guide() {
                     </div>
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-psychology-secondary" />
-                      <span>78 道详细题目</span>
+                      <span>约 68-136 道详细题目</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Brain className="w-4 h-4 text-psychology-accent" />
-                      <span>更全面的心理分析</span>
+                      <span>更全面的研究构念与情境分析</span>
                     </div>
                   </div>
                 </div>
@@ -187,7 +187,7 @@ export default function Guide() {
                   },
                   {
                     title: "完整作答",
-                    desc: "尽量完成所有问题，跳过太多会影响结果准确性",
+                    desc: "尽量完成所有问题；结果仍需结合个人困扰、功能影响和安全情境理解",
                     icon: Target,
                     color: "text-psychology-secondary"
                   },
@@ -223,7 +223,7 @@ export default function Guide() {
                 <div className="space-y-3 text-sm">
                   <div className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 bg-psychology-warning rounded-full mt-2 flex-shrink-0"></div>
-                    <span><strong>非诊断工具：</strong>SRI指数仅供自我了解和学术研究，不能替代专业心理咨询或医疗诊断</span>
+                    <span><strong>非诊断工具：</strong>SRI 显示值仅供自我了解和反思，不能替代专业心理咨询或医疗诊断</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 bg-psychology-warning rounded-full mt-2 flex-shrink-0"></div>

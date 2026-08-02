@@ -117,13 +117,13 @@ export function ShareCard({ session, compact = false, showBranding = true }: Sha
         <div className="space-y-2">
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <BarChart3 className="w-4 h-4" />
-            <span>基于科学心理测量学</span>
+            <span>研究参考的自我反思工具</span>
           </div>
           
           {showBranding && (
             <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
               <Sparkles className="w-3 h-3" />
-              <span>专业评估工具 · 隐私保护</span>
+              <span>自我反思工具 · 隐私保护</span>
             </div>
           )}
         </div>
@@ -225,7 +225,7 @@ export async function generateShareCardImage(session: AssessmentSession): Promis
   ctx.fillStyle = '#64748b';
   ctx.font = '14px Arial, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('基于科学心理测量学的专业评估工具', canvas.width / 2, 380);
+  ctx.fillText('研究参考的性健康自我反思工具', canvas.width / 2, 380);
   
   // 绘制隐私说明
   ctx.fillStyle = '#94a3b8';

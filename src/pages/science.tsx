@@ -1,9 +1,10 @@
 /**
- * 科学依据页面 - 展示SRI评估工具的理论基础和研究支撑
- * 提供详细的学术背景和量表信效度信息
+ * 科学依据页面 - 展示 SRI 的研究参考、题目来源和测量边界
+ * 提供公开来源、产品定义与非诊断使用说明
  */
 
 import React from 'react';
+import {MEDICAL_REFERENCES} from '@/lib/medical-references';
 import {Link} from 'react-router-dom';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
@@ -62,7 +63,7 @@ export default function Science() {
             科学依据
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            基于严谨的心理学研究和经典量表构建的性压抑指数评估体系
+            结合性健康框架、研究理论与自评题库的教育性工具；不替代临床评估，也不提供诊断结论
           </p>
         </div>
 
@@ -80,23 +81,23 @@ export default function Science() {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-foreground">双控制模型 (Dual Control Model)</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">
-                    由Janssen等人(2002)提出的性反应双控制模型，认为人类性反应受到性兴奋系统(SES)和性抑制系统(SIS)的双重调节。
-                    该模型为理解个体性行为差异提供了重要的理论框架。
+                    Bancroft与Janssen(2000)提出的双控制模型，将性反应理解为性兴奋系统(SES)与性抑制系统(SIS)的互动。
+                    这里将其作为研究理论来组织题目，不把模型分数解释为个人疾病或医学风险。
                   </p>
                   <div className="flex items-center gap-2">
                     <Award className="w-4 h-4 text-psychology-warning" />
-                    <span className="text-sm font-medium">国际权威理论</span>
+                    <span className="text-sm font-medium">研究理论来源</span>
                   </div>
                 </div>
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-foreground">性压抑概念</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">
-                    性压抑是指个体对性冲动、性欲望和性行为的系统性抑制，通常源于心理、社会文化和道德因素的综合影响。
-                    现代心理学研究表明，适度的性抑制是正常的，但过度压抑可能影响心理健康。
+                    本工具把“性压抑”作为对性相关想法、感受或互动的主观困扰与回避体验来讨论。
+                    个体差异本身不是疾病；是否需要临床关注，要结合持续时间、个人困扰、功能影响、安全与其他健康因素由专业人员评估。
                   </p>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-psychology-success" />
-                    <span className="text-sm font-medium">循证支持</span>
+                    <span className="text-sm font-medium">研究背景</span>
                   </div>
                 </div>
               </div>
@@ -108,7 +109,7 @@ export default function Science() {
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <BarChart3 className="w-6 h-6 text-psychology-secondary" />
-                量表构成
+                研究构念与题目来源
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -120,35 +121,32 @@ export default function Science() {
                       fullName: "性抑制/性兴奋量表简版",
                       items: "14项",
                       author: "Janssen et al. (2002)",
-                      reliability: "α = 0.84-0.91",
-                      desc: "测量性抑制和性兴奋系统的敏感性，包括性能表现相关抑制(SIS1)和威胁/恐惧相关抑制(SIS2)两个维度。",
+                      evidenceNote: "原始研究量表；本中文题库未完成独立信效度验证",
+                      desc: "用于描述性兴奋、性能表现相关抑制(SIS1)与威胁/后果相关抑制(SIS2)等研究构念，不用于个人诊断。",
                       color: "bg-psychology-primary/10 border-psychology-primary/20"
                     },
                     {
                       name: "Mosher性内疚量表",
                       fullName: "Mosher Sexual Guilt Scale", 
                       items: "10项",
-                      author: "Mosher (1988)",
-                      reliability: "α = 0.88-0.93",
-                      desc: "评估个体对性行为和性想法的内疚感程度，反映道德化性压抑的核心特征。",
+                      evidenceNote: "研究构念改写；本版本未完成独立信效度验证",
+                      desc: "用于探索性内疚和道德化压力体验，不能把文化或宗教价值观差异判定为病理。",
                       color: "bg-psychology-secondary/10 border-psychology-secondary/20"
                     },
                     {
                       name: "KISS-9性羞耻量表",
                       fullName: "Kyle Inventory of Sexual Shame",
                       items: "9项", 
-                      author: "Kyle et al. (2013)",
-                      reliability: "α = 0.92-0.95",
-                      desc: "测量个体对性身份、性想法和性行为的羞耻体验，捕捉深层的性自我概念问题。",
+                      evidenceNote: "研究构念改写；本版本未完成独立信效度验证",
+                      desc: "用于探索性羞耻和自我评价体验，不对性身份、取向或经历作价值判断。",
                       color: "bg-psychology-accent/10 border-psychology-accent/20"
                     },
                     {
                       name: "SOS性观感量表",
                       fullName: "Sexual Opinion Survey",
-                      items: "5项筛查版",
-                      author: "Fisher et al. (1988)", 
-                      reliability: "α = 0.82-0.89",
-                      desc: "评估个体对性刺激和性相关内容的情绪取向，测量性开放性与保守性。",
+                      items: "5项简版",
+                      evidenceNote: "研究构念改写；本版本未完成独立信效度验证",
+                      desc: "用于探索对性相关内容的主观舒适度与回避体验，不将开放或保守偏好视为医学问题。",
                       color: "bg-psychology-warning/10 border-psychology-warning/20"
                     }
                   ].map((scale) => (
@@ -164,8 +162,7 @@ export default function Science() {
                           </div>
                           <p className="text-sm text-muted-foreground leading-relaxed">{scale.desc}</p>
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span><strong>作者：</strong>{scale.author}</span>
-                            <span><strong>信度：</strong>{scale.reliability}</span>
+                            <span><strong>证据边界：</strong>{scale.evidenceNote}</span>
                           </div>
                         </div>
                       </CardContent>
@@ -191,71 +188,53 @@ export default function Science() {
                   <div className="text-sm text-muted-foreground space-y-2">
                     <div>1. <strong>性观感反向</strong>：SOS分数反向转换，高分表示对性刺激的消极反应</div>
                     <div>2. <strong>性内疚</strong>：Mosher量表原始分数，反映道德化性压抑</div>
-                    <div>3. <strong>性羞耻</strong>：KISS-9分数，测量性身份羞耻体验</div>
-                    <div>4. <strong>抑制优势</strong>：(SIS1+SIS2-SES)差值，反映抑制相对兴奋的优势</div>
+                    <div>3. <strong>性羞耻</strong>：KISS-9题目反映性相关自我评价和羞耻体验，不对身份或取向作判断</div>
+                    <div>4. <strong>抑制优势</strong>：(SIS1+SIS2-SES)差值，反映研究模型中的抑制相对兴奋优势</div>
                   </div>
                 </div>
                 <div className="bg-muted/30 p-4 rounded-lg">
                   <h4 className="font-semibold text-foreground mb-2">z分数标准化</h4>
                   <p className="text-sm text-muted-foreground">
-                    采用基于人群常模的z分数标准化方法，将各维度分数转换为标准正态分布，
-                    确保不同量表分数的可比性和合成指数的统计学意义。
+                    当前内置的参考均值只用于演示性相对比较，并不是代表性常模，也没有经过本地人群验证。
+                    因此不能据此推导医学百分位、正常范围或临床切点。
                   </p>
                 </div>
                 <div className="bg-muted/30 p-4 rounded-lg">
                   <h4 className="font-semibold text-foreground mb-2">SRI合成计算</h4>
                   <p className="text-sm text-muted-foreground">
-                    通过等权重合成四个维度的z分数，再经过标准正态累积分布函数(CDF)转换为0-100的百分位数，
-                    提供直观易懂的性压抑指数。
+                    等权合成和CDF映射是本产品定义的探索性显示方式，用于帮助用户观察回答模式，
+                    不是经过验证的临床量表总分，也不能单独决定是否需要治疗或诊断。
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* 信效度证据 */}
+          {/* 测量证据边界 */}
           <Card className="sri-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <Shield className="w-6 h-6 text-psychology-success" />
-                信效度证据
+                测量证据边界
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-foreground">信度指标</h4>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
-                      <span>内部一致性</span>
-                      <Badge variant="secondary">α &gt; 0.80</Badge>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
-                      <span>重测信度</span>
-                      <Badge variant="secondary">r &gt; 0.75</Badge>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
-                      <span>分半信度</span>
-                      <Badge variant="secondary">r &gt; 0.78</Badge>
-                    </div>
-                  </div>
+              <div className="grid md:grid-cols-2 gap-6 text-sm">
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-foreground">研究层面的依据</h4>
+                  <p className="text-muted-foreground leading-relaxed">
+                    双控制模型与 SIS/SES 原始论文为性兴奋、性抑制构念提供研究背景。原论文的样本、语言和测量目的
+                    不能自动转化为本项目中文改写题库的信效度或临床常模。
+                  </p>
+                  <Badge variant="secondary">研究参考</Badge>
                 </div>
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-foreground">效度证据</h4>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
-                      <span>结构效度</span>
-                      <Badge variant="secondary">CFI &gt; 0.90</Badge>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
-                      <span>聚合效度</span>
-                      <Badge variant="secondary">AVE &gt; 0.50</Badge>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
-                      <span>区分效度</span>
-                      <Badge variant="secondary">√AVE &gt; r</Badge>
-                    </div>
-                  </div>
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-foreground">本项目当前状态</h4>
+                  <p className="text-muted-foreground leading-relaxed">
+                    当前没有代表性中文常模，也没有为本版本完成独立的内部一致性、重测、结构效度或临床效度研究。
+                    结果只用于自我观察和后续对话，不应用于筛选、诊断、治疗决策或对他人分类。
+                  </p>
+                  <Badge variant="outline">待验证</Badge>
                 </div>
               </div>
             </CardContent>
@@ -273,30 +252,73 @@ export default function Science() {
               <div className="grid md:grid-cols-3 gap-4">
                 {[
                   {
-                    title: "性心理研究",
-                    desc: "用于性态度、性行为和性心理健康的实证研究",
+                    title: "教育与自我反思",
+                    desc: "帮助用户观察性相关困扰、回避和支持环境，不做诊断",
                     icon: Brain,
-                    count: "500+"
+                    count: "非诊断"
                   },
                   {
-                    title: "临床评估",
-                    desc: "辅助性功能障碍和性心理问题的临床评估",
+                    title: "中文题库验证",
+                    desc: "需要独立样本、信效度和跨文化测量等后续研究",
                     icon: FileText,
-                    count: "200+"
+                    count: "待验证"
                   },
                   {
-                    title: "文化比较",
-                    desc: "跨文化性观念和性行为模式的比较研究",
+                    title: "临床沟通边界",
+                    desc: "可作为对话起点，但不能替代问诊、体检或专业判断",
                     icon: Users,
-                    count: "150+"
+                    count: "不用于诊断"
                   }
                 ].map(({ title, desc, icon: Icon, count }) => (
                   <div key={title} className="text-center p-4 bg-muted/30 rounded-lg">
                     <Icon className="w-8 h-8 text-psychology-primary mx-auto mb-3" />
                     <h4 className="font-semibold text-foreground mb-2">{title}</h4>
                     <p className="text-sm text-muted-foreground mb-3">{desc}</p>
-                    <Badge variant="outline">{count} 研究</Badge>
+                    <Badge variant="outline">{count}</Badge>
                   </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 现行医疗标准与研究参考 */}
+          <Card className="sri-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <BookOpen className="w-6 h-6 text-psychology-primary" />
+                现行医疗标准与研究参考
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                题目中的“困扰、生活影响、同意、边界、信息可及性与求助”用语参考 WHO、CDC、ICD-11 与 DSM-5-TR 的临床边界。
+                这些来源用于教育和题目设计，不会把性取向、性别、关系状态或性活动频率当作疾病，也不为本工具建立诊断切点。
+              </p>
+              <div className="grid gap-3">
+                {MEDICAL_REFERENCES.map((reference) => (
+                  <a
+                    key={reference.id}
+                    href={reference.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-lg border border-border/60 bg-muted/20 p-4 transition-colors hover:bg-muted/40"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <h3 className="font-semibold text-foreground">{reference.title}</h3>
+                      <Badge variant="secondary">
+                        {reference.type === 'guideline' ? '指南/标准' : '研究'}
+                      </Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {reference.organization} · {reference.year}
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                      {reference.summary}
+                    </p>
+                    <p className="mt-2 text-xs text-psychology-primary">
+                      用于：{reference.usedFor.join('、')}
+                    </p>
+                  </a>
                 ))}
               </div>
             </CardContent>
@@ -315,19 +337,19 @@ export default function Science() {
                 <div className="space-y-3 text-sm">
                   <div className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 bg-psychology-warning rounded-full mt-2 flex-shrink-0"></div>
-                    <span><strong>常模限制：</strong>当前使用的是基于西方样本的参考常模，在中文文化背景下的适用性需要进一步验证</span>
+                    <span><strong>常模限制：</strong>本版本没有代表性中文常模；内部参考值仅用于保持产品显示兼容，不能当作人群标准</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 bg-psychology-warning rounded-full mt-2 flex-shrink-0"></div>
-                    <span><strong>测量误差：</strong>所有心理测量工具都存在测量误差，结果应结合其他信息综合解释</span>
+                    <span><strong>测量限制：</strong>中文题目尚未完成独立信效度验证，结果应结合个人情境而非单独解释</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 bg-psychology-warning rounded-full mt-2 flex-shrink-0"></div>
-                    <span><strong>动态变化：</strong>性压抑水平可能随时间、经历和环境变化，单次测评结果不代表永久特征</span>
+                    <span><strong>动态变化：</strong>回答可能随时间、经历和环境变化，单次显示值不代表永久特征</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 bg-psychology-warning rounded-full mt-2 flex-shrink-0"></div>
-                    <span><strong>研究用途：</strong>主要用于学术研究和自我了解，不应用于临床诊断或重要决策</span>
+                    <span><strong>使用范围：</strong>用于性健康教育和自我反思，不应用于临床诊断、筛选或重要决策</span>
                   </div>
                 </div>
               </div>

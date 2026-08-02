@@ -10,13 +10,15 @@ export interface Scale {
   description: string;
   questions: Question[];
   scoring: ScoringMethod;
+  /** Whether this scale contributes to the composite SRI score. */
+  includeInSRI?: boolean;
 }
 
 // 问题类型
 export interface Question {
   id: string;
   text: string;
-  scale: string; // 所属量表ID
+  scale: string; // 所属量表 ID
   type: 'likert' | 'binary' | 'multiple';
   options: QuestionOption[];
   required: boolean;
@@ -77,13 +79,13 @@ export interface ScaleScore {
 
 // 四维度分数
 export interface DimensionScores {
-  sosReversed: number; // SOS反向分数
+  sosReversed: number; // SOS 反向分数
   sexGuilt: number; // 性内疚
   sexualShame: number; // 性羞耻
-  sisOverSes: number; // SIS相对SES优势
+  sisOverSes: number; // SIS 相对 SES 优势
 }
 
-// SRI指数计算结果
+// SRI 指数计算结果
 export interface SRIResult {
   totalScore: number; // 0-100
   zScore: number;
@@ -100,6 +102,17 @@ export interface AssessmentResults {
   interpretation: string[];
   recommendations: string[];
   calculatedAt: Date;
+  clinicalContext?: ClinicalContext;
+}
+
+// Evidence-informed context summary (not a diagnosis or clinical cutoff)
+export interface ClinicalContext {
+  distressScore: number; // 0-100, descriptive self-report only
+  protectiveContextScore: number; // 0-100, higher is more protective
+  impactFlag: boolean;
+  safetyFlag: boolean;
+  supportFlag: boolean;
+  note: string;
 }
 
 // 本地存储数据结构
@@ -137,10 +150,11 @@ export const SCALE_IDS = {
   MOSHER: 'mosher_guilt',
   KISS9: 'kiss9_shame',
   SOS: 'sos_screening',
-  BSAS: 'bsas_attitudes'
+  BSAS: 'bsas_attitudes',
+  WELLBEING: 'sexual_wellbeing_checkin'
 } as const;
 
-// SRI等级定义
+// SRI 等级定义
 export const SRI_LEVELS = {
   'very-low': { min: 0, max: 20, label: '很低（较少压抑）', color: 'psychology-success' },
   'low': { min: 20, max: 40, label: '偏低', color: 'green-600' },
@@ -156,6 +170,14 @@ export const LIKERT_OPTIONS = {
   NEUTRAL: { value: 3, label: '中性' },
   AGREE: { value: 4, label: '同意' },
   STRONGLY_AGREE: { value: 5, label: '非常同意' }
+} as const;
+// Five-option (0-4) check-in scale used only for recent context, not SRI norms
+export const CHECKIN_OPTIONS = {
+  NEVER: { value: 0, label: '从不' },
+  RARELY: { value: 1, label: '很少' },
+  SOMETIMES: { value: 2, label: '有时' },
+  OFTEN: { value: 3, label: '经常' },
+  ALMOST_ALWAYS: { value: 4, label: '几乎总是' }
 } as const;
 
 // 频率选项

@@ -1,6 +1,6 @@
 /**
  * 结果页面 - 显示SRI指数计算结果和详细分析
- * 提供专业的心理测评结果展示和个性化建议
+ * 提供研究参考的自我反思结果展示与情境提示
  */
 
 import React, {useEffect, useState} from 'react';
@@ -351,7 +351,7 @@ export default function Results() {
               <BarChart3 className="w-10 h-10 text-psychology-primary" />
             </div>
             <CardTitle className="text-2xl sm:text-3xl font-bold text-psychology-primary mb-2">
-              性压抑指数 (SRI)
+              探索性 SRI 显示值
             </CardTitle>
             <div className="text-4xl sm:text-6xl font-bold text-psychology-primary mb-4">
               {Math.round(sri.totalScore)}
@@ -367,15 +367,15 @@ export default function Results() {
             {/* 分数解释 */}
             <div className="text-center">
               <p className="text-muted-foreground mb-4">
-                您的SRI指数为 <span className="font-semibold text-psychology-primary">{Math.round(sri.totalScore)}</span>，
-                处于 <span className="font-semibold">{levelInfo.label}</span> 水平
+                本次回答的探索性 SRI 显示值为 <span className="font-semibold text-psychology-primary">{Math.round(sri.totalScore)}</span>，
+                处于 <span className="font-semibold">{levelInfo.label}</span> 区间
               </p>
               <div className="max-w-2xl mx-auto">
                 <Progress value={sri.totalScore} className="h-3 mb-2" />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>0 (较少压抑)</span>
-                  <span>50 (中等)</span>
-                  <span>100 (较多压抑)</span>
+                  <span>0（相对较低）</span>
+                  <span>50（中间区间）</span>
+                  <span>100（相对较高）</span>
                 </div>
               </div>
             </div>
@@ -399,12 +399,51 @@ export default function Results() {
               </div>
             )}
 
+            {session.results.clinicalContext && (
+              <div className="rounded-lg border border-psychology-primary/20 bg-psychology-primary/5 p-4">
+                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-psychology-primary" />
+                  近四周性健康情境
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                  这是补充性的自我报告摘要，不是诊断、风险分层或医疗建议。
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-md bg-background/70 p-3">
+                    <span className="text-muted-foreground">困扰体验（0–100）</span>
+                    <strong className="block text-lg text-foreground">{session.results.clinicalContext.distressScore}</strong>
+                  </div>
+                  <div className="rounded-md bg-background/70 p-3">
+                    <span className="text-muted-foreground">保护性环境（0–100）</span>
+                    <strong className="block text-lg text-foreground">{session.results.clinicalContext.protectiveContextScore}</strong>
+                  </div>
+                </div>
+                {(session.results.clinicalContext.impactFlag ||
+                  session.results.clinicalContext.safetyFlag ||
+                  session.results.clinicalContext.supportFlag) && (
+                  <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                    {session.results.clinicalContext.impactFlag && (
+                      <p>• 困扰可能已经影响日常生活或关系，可考虑与专业人员讨论。</p>
+                    )}
+                    {session.results.clinicalContext.safetyFlag && (
+                      <p>• 如果你感到无法自由拒绝或不安全，请优先联系当地可信任的支持或医疗服务。</p>
+                    )}
+                    {session.results.clinicalContext.supportFlag && (
+                      <p>• 你可以按自己的节奏，从可靠信息、基层医疗或心理咨询服务开始寻求支持。</p>
+                    )}
+                  </div>
+                )}
+                <p className="mt-3 text-xs text-muted-foreground">{session.results.clinicalContext.note}</p>
+              </div>
+            )}
+
+
             {/* 个性化建议 */}
             {session.results.recommendations && session.results.recommendations.length > 0 && (
               <div>
                 <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-psychology-primary" />
-                  个性化建议
+                  自我反思提示
                 </h3>
                 <div className="space-y-2">
                   {session.results.recommendations.map((text, index) => (
@@ -424,7 +463,7 @@ export default function Results() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-psychology-primary" />
-              四维度分析
+              四个研究维度的回答模式
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -547,9 +586,8 @@ export default function Results() {
               <div className="space-y-2 text-sm">
                 <h4 className="font-semibold text-yellow-800">重要声明</h4>
                 <p className="text-yellow-700 leading-relaxed">
-                  本测评结果仅供参考，不构成医学诊断。SRI指数是基于科学研究的心理测量工具，
-                  旨在帮助您了解自己的性心理特征。如果您对结果有疑问或需要专业帮助，
-                  建议咨询专业的心理健康专家。
+                  本测评结果仅供教育和自我反思，不构成医学诊断。SRI 是基于研究构念的探索性显示值，
+                  不能替代性健康、心理健康或其他医疗评估；如有持续困扰、功能影响或安全问题，请联系专业服务。
                 </p>
                 <p className="text-yellow-700 leading-relaxed">
                   您的所有数据都安全地保存在本地设备上，我们不会收集或传输您的个人信息。

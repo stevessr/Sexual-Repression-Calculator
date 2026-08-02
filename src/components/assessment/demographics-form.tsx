@@ -107,7 +107,7 @@ export function DemographicsForm({ onSubmit, onBack, initialData }: Demographics
           基本信息
         </h1>
         <p className="text-muted-foreground">
-          请提供一些基本信息，这将帮助我们提供更准确的结果分析
+          请提供一些基本信息，这将帮助我们选择合适的题目组合
         </p>
       </div>
 

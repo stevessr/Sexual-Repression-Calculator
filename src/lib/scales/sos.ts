@@ -2,8 +2,8 @@ import { Scale, LIKERT_OPTIONS } from '@/types';
 
 export const SOS_SCREENING: Scale = {
   id: 'sos_screening',
-  name: 'SOS性观感筛查',
-  description: '性观感调查的简化筛查版本，测量对性刺激的情绪取向',
+  name: 'SOS性观感简版',
+  description: '性观感研究构念的简化题目，用于观察对性刺激的主观情绪取向',
   questions: [
     { id: 'sos_1', text: '我对色情内容感到不舒服', scale: 'sos_screening', type: 'likert', options: Object.values(LIKERT_OPTIONS), required: true },
     { id: 'sos_2', text: '性相关的话题让我感到尴尬', scale: 'sos_screening', type: 'likert', options: Object.values(LIKERT_OPTIONS), required: true },

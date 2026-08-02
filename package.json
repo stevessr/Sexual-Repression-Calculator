@@ -4,14 +4,13 @@
   "version": "1",
   "type": "module",
   "scripts": {
-    "dev": "rsbuild dev",
-    "build": "rsbuild build -c rsbuild.config.ts && rsbuild build -c rsbuild.config.server.ts",
+    "build": "npm run build:client",
     "build:client": "rsbuild build -c rsbuild.config.ts",
     "build:cloudflare": "rsbuild build -c rsbuild.config.cloudflare.ts",
     "cf:deploy": "npm install --legacy-peer-deps && npm run build:cloudflare",
-    "build:server": "rsbuild build -c rsbuild.config.server.ts",
     "type-check": "tsc -b --pretty",
     "lint": "tsc -b --pretty",
+    "test:references": "node --experimental-strip-types --test tests/medical-references.test.ts tests/medical-context.test.ts tests/sexual-wellbeing.test.ts",
     "preview": "rsbuild preview"
   },
   "dependencies": {

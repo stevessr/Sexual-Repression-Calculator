@@ -13,45 +13,20 @@ import {getAssessmentSession} from '@/lib/storage';
  */
 export function generateShareText(session: AssessmentSession): string {
   if (!session.results) {
-    return '我刚完成了SRI性压抑指数评估，发现了一些有趣的心理特征！';
+    return '我刚完成了一个性健康自我反思工具，准备回顾自己的回答模式。';
   }
 
   const sri = session.results.sri;
   const levelInfo = SRI_LEVELS[sri.level];
   const score = Math.round(sri.totalScore);
-  
-  const templates = {
-    'very-low': [
-      `我的SRI性压抑指数是${score}分，属于${levelInfo.label}！看来我对性的态度比较开放健康呢 😊`,
-      `刚测完SRI指数：${score}分（${levelInfo.label}）！心理健康状态不错，对自己的性心理有了更好的了解 ✨`,
-      `SRI评估结果出炉：${score}分，${levelInfo.label}水平。感觉自己在性心理方面比较自在！`
-    ],
-    'low': [
-      `我的SRI性压抑指数：${score}分（${levelInfo.label}），整体还是比较健康的状态！`,
-      `完成了专业的SRI评估，得分${score}，属于${levelInfo.label}。对自己有了新的认识！`,
-      `SRI指数测试结果：${score}分，${levelInfo.label}。性心理健康状况良好 👍`
-    ],
-    'moderate': [
-      `我的SRI性压抑指数是${score}分，处于${levelInfo.label}水平。可能需要多关注一下自己的心理健康~`,
-      `刚做了SRI评估：${score}分（${levelInfo.label}）。发现了一些值得思考的心理特征！`,
-      `SRI测试完成！得分${score}，${levelInfo.label}水平。这个结果让我对自己有了新的理解 🤔`
-    ],
-    'high': [
-      `完成了SRI性压抑指数评估，得分${score}（${levelInfo.label}）。看来需要更多关爱自己的心理健康了！`,
-      `我的SRI指数：${score}分，属于${levelInfo.label}。这个专业测评让我意识到需要更多自我关怀 💝`,
-      `SRI评估结果：${score}分（${levelInfo.label}）。准备开始更好地照顾自己的心理健康！`
-    ],
-    'very-high': [
-      `刚完成SRI性压抑指数测评，得分${score}（${levelInfo.label}）。这个结果提醒我要更关注心理健康 🌱`,
-      `我的SRI指数是${score}分，${levelInfo.label}水平。这个科学评估给了我很好的自我认知机会！`,
-      `SRI测试结果：${score}分（${levelInfo.label}）。感谢这个专业工具让我更了解自己 💪`
-    ]
-  };
-  
-  const levelTemplates = templates[sri.level];
-  const randomTemplate = levelTemplates[Math.floor(Math.random() * levelTemplates.length)];
-  
-  return `${randomTemplate}\n\n🧠 SRI性压抑指数计算器 - 基于科学心理测量学的专业评估工具\n帮助你更好地了解自己的性心理特征，促进心理健康发展！\n\n#SRI评估 #心理健康 #自我认知`;
+  const templates = [
+    `我的探索性 SRI 显示值是 ${score} 分（${levelInfo.label}），用于自我反思，不是诊断结论。`,
+    `我完成了性健康自我反思：SRI 显示值 ${score} 分（${levelInfo.label}），结果需要结合个人情境理解。`,
+    `刚完成一次性健康自我反思，SRI 显示值为 ${score} 分（${levelInfo.label}），我会把它当作进一步了解自己的起点。`
+  ];
+  const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+
+  return `${randomTemplate}\n\nSRI 性压抑指数计算器：面向性健康教育的探索性自我反思工具，不提供医学诊断。\n\n#性健康教育 #自我反思`;
 }
 
 /**

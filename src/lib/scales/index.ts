@@ -10,6 +10,7 @@ export * from './kiss9_shame';
 export * from './sos';
 export * from './bsas_brief';
 export * from './demographics_questions';
+export * from './sexual_wellbeing';
 
 // Explicit aggregated exports for app flows
 import {
@@ -21,6 +22,7 @@ import { KISS9_SHAME } from './kiss9_shame';
 import { SOS_SCREENING, SOS_FULL } from './sos';
 import { BSAS_BRIEF } from './bsas_brief';
 import { DEMOGRAPHICS_QUESTIONS } from './demographics_questions';
+import { SEXUAL_WELLBEING_CHECKIN } from './sexual_wellbeing';
 import {
   TEEN_SEXUAL_ATTITUDES,
   SEXUAL_COGNITION,
@@ -42,6 +44,7 @@ export const ALL_SCALES = {
   [SOS_SCREENING.id]: SOS_SCREENING,
   [SOS_FULL.id]: SOS_FULL,
   [BSAS_BRIEF.id]: BSAS_BRIEF,
+  [SEXUAL_WELLBEING_CHECKIN.id]: SEXUAL_WELLBEING_CHECKIN,
   // adaptive
   [TEEN_SEXUAL_ATTITUDES.id]: TEEN_SEXUAL_ATTITUDES,
   [SEXUAL_COGNITION.id]: SEXUAL_COGNITION,
@@ -53,7 +56,8 @@ export const QUICK_ASSESSMENT_SCALES = [
   SIS_SES_SF.id,
   MOSHER_GUILT.id,
   KISS9_SHAME.id,
-  SOS_SCREENING.id
+  SOS_SCREENING.id,
+  SEXUAL_WELLBEING_CHECKIN.id
 ];
 
 // The previous "full" measurement is now the incremental assessment
@@ -62,7 +66,8 @@ export const INCREMENTAL_ASSESSMENT_SCALES = [
   MOSHER_GUILT_FULL.id,
   KISS9_SHAME.id,
   SOS_FULL.id,
-  BSAS_BRIEF.id
+  BSAS_BRIEF.id,
+  SEXUAL_WELLBEING_CHECKIN.id
 ];
 
 // Fully-detailed assessment includes all defined scales

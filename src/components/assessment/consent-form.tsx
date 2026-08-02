@@ -72,7 +72,7 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
           性压抑指数评估
         </h1>
         <p className="text-muted-foreground text-lg">
-          基于科学研究的心理测评工具
+          研究参考的性健康自我反思工具
         </p>
       </div>
 
@@ -95,9 +95,8 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
               <div>
                 <h3 className="font-semibold mb-2">评估目的</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  本评估旨在帮助您了解自己在性心理方面的特征，包括对性相关刺激的情绪反应、
-                  性内疚感、性羞耻体验以及性抑制与兴奋的平衡。这是一个基于科学研究的自我探索工具，
-                  可以促进您对自身性心理健康的认知和理解。
+                  本评估帮助您反思性相关刺激、内疚、羞耻、抑制与兴奋等体验；题目是基于研究构念的教育性改写，
+                  不代表经过验证的临床量表，也不提供诊断结论。
                 </p>
               </div>
             </div>
@@ -124,9 +123,8 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
               <div>
                 <h3 className="font-semibold mb-2">隐私保护</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  您的所有回答将完全匿名化处理，仅保存在您的设备本地，不会上传到任何服务器。
-                  我们不收集任何可识别个人身份的信息。您可以随时删除本地保存的数据，
-                  也可以选择导出数据用于个人记录。您的隐私和数据安全是我们的首要关注。
+                  您的回答在浏览器本地处理并保存，不主动上传到服务器。请不要填写姓名、联系方式等可识别信息。
+                  您可以随时删除本地保存的数据，也可以选择导出数据用于个人记录；使用公共或共享设备时请先确认隐私设置。
                 </p>
               </div>
             </div>
@@ -138,7 +136,7 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
                   onClick={(e) => e.stopPropagation()}
                   className="mt-1"
                 />
-                <span>我理解我的数据将被匿名化处理并仅保存在本地设备上</span>
+                <span>我理解回答在本地处理且不主动上传，也会避免填写可识别个人信息</span>
               </label>
             </div>
           </div>
@@ -285,8 +283,8 @@ export function ConsentForm({ onConsent, onBack, isMinor = false }: ConsentFormP
       {/* 底部说明 */}
       <div className="text-center text-xs text-muted-foreground">
         <p>
-          本工具基于科学研究文献开发，量表来源包括 SIS/SES-SF、Mosher 性内疚量表、
-          KISS-9 性羞耻量表等经过验证的心理测量工具。
+          本工具参考性健康研究、WHO/CDC 等公开框架和相关量表构念；中文题目尚未完成独立信效度验证，
+          结果仅用于教育和自我反思，不替代专业评估。
         </p>
       </div>
     </div>

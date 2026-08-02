@@ -136,7 +136,7 @@ export function ShareStats({ className }: ShareStatsProps) {
             感谢您的分享！
           </p>
           <p className="text-xs text-muted-foreground">
-            您的推荐帮助更多人关注心理健康
+            您的推荐帮助更多人了解性健康与自我反思
           </p>
         </div>
         

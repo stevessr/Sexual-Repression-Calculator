@@ -1,14 +1,15 @@
 /**
- * SRI 指数计算引擎 - 基于科学心理测量学的核心算法
- * 实现 z 分数标准化、四维度计算、SRI 指数合成等功能
+ * 探索性 SRI 显示引擎 - 使用产品参考值生成可读的相对显示
+ * 实现 z 分数转换、四维度计算和 0-100 显示映射
  */
 
 import {AssessmentResults, DimensionScores, NormativeData, Response, ScaleScore, SRI_LEVELS, SRIResult} from '@/types';
 import {ALL_SCALES} from '@/lib/scales';
+import {calculateClinicalContext} from '@/lib/medical-context';
 
 /**
  * 标准正态分布累积分布函数 (CDF)
- * 用于将 z 分数转换为 0-100 的百分位数
+ * 用于将相对 z 分数转换为 0-100 的显示刻度
  */
 function normalCDF(x: number): number {
   const a1 = 0.254829592;
@@ -58,7 +59,7 @@ export function calculateRawScore(responses: Response[], scaleId: string): numbe
       const validValues = question.options.map(o => o.value);
       const minValue = Math.min(...validValues);
       const maxValue = Math.max(...validValues);
-      let rawValue = response.value;
+      let rawValue = Number.isFinite(response.value) ? response.value : minValue;
       if (rawValue < minValue || rawValue > maxValue) {
         console.warn(`Response value ${response.value} for question ${question.id} out of range [${minValue}, ${maxValue}], clamping.`);
         rawValue = Math.max(minValue, Math.min(maxValue, rawValue));
@@ -90,14 +91,13 @@ export function calculateZScore(rawScore: number, mean: number, stdDev: number):
 }
 
 /**
- * 获取默认常模数据（基于文献的参考值）
- * 实际应用中应该使用本地样本建立常模
+ * 获取产品兼容用的参考值。
+ * 这些值不是本地代表性常模；实际临床或研究用途应使用经过验证的人群常模。
  */
 export function getDefaultNorms(): NormativeData {
   return {
-    sampleSize: 1000, // 模拟样本大小
+    sampleSize: 0, // 没有本地常模样本；仅保留参考值以兼容现有结果
     means: {
-      // SIS/SES-SF参考均值（基于文献）
       'sis_total': 35.2,
       'ses_total': 16.8,
       'sis1_total': 15.4,
@@ -343,17 +343,22 @@ export function calculateAssessmentResults(
   const scaleScores: ScaleScore[] = [];
   
   for (const scaleId of Object.keys(ALL_SCALES)) {
+    const scale = ALL_SCALES[scaleId];
+    if (scale?.includeInSRI === false) {
+      continue;
+    }
+
     const rawScore = calculateRawScore(responses, scaleId);
-    
+
     // 只有当量表有回答时才计算分数
     if (rawScore > 0) {
       const meanKey = `${scaleId.replace('_sf', '_total')}`;
       const mean = normsData.means[meanKey] || normsData.means[scaleId] || 0;
       const stdDev = normsData.standardDeviations[meanKey] || normsData.standardDeviations[scaleId] || 1;
-      
+
       const zScore = calculateZScore(rawScore, mean, stdDev);
       const percentile = normalCDF(zScore) * 100;
-      
+
       scaleScores.push({
         scaleId,
         rawScore,
@@ -375,17 +380,32 @@ export function calculateAssessmentResults(
   const sri = calculateSRI(dimensionScores);
   sri.scaleScores = scaleScores;
   
-  // 生成解释和建议
   const interpretation = generateInterpretation(sri);
   const recommendations = generateRecommendations(sri);
+  const clinicalContext = calculateClinicalContext(responses);
   
-  return {
+  if (clinicalContext?.impactFlag) {
+    recommendations.push('如果这些困扰已影响日常生活或关系，建议预约合适的医疗或心理健康专业人员进一步讨论。');
+  }
+  if (clinicalContext?.safetyFlag) {
+    recommendations.push('如果你在亲密互动中感到不安全或无法自由拒绝，请优先联系当地可信任的支持或医疗服务。');
+  }
+  if (clinicalContext?.supportFlag) {
+    recommendations.push('可以先从可信赖的性健康信息、基层医疗或心理咨询服务开始，按自己的节奏寻求帮助。');
+  }
+  const result: AssessmentResults = {
     sessionId,
     sri,
     interpretation,
     recommendations,
     calculatedAt: new Date()
   };
+
+  if (clinicalContext) {
+    result.clinicalContext = clinicalContext;
+  }
+
+  return result;
 }
 
 /**
@@ -396,8 +416,8 @@ export function calculateAssessmentResults(
 function generateInterpretation(sri: SRIResult): string[] {
   const level = SRI_LEVELS[sri.level];
   const interpretation = [
-    `您的性压抑指数为 ${sri.totalScore} 分，处于「${level.label}」水平。`,
-    `这表明您在性相关的心理体验方面${getInterpretationByLevel(sri.level)}。`
+    `您的探索性 SRI 显示值为 ${sri.totalScore} 分，处于「${level.label}」水平。`,
+    `这只反映本次回答在性相关心理体验方面${getInterpretationByLevel(sri.level)}，不代表诊断或“正常/异常”判断。`
   ];
   
   // 添加维度分析
@@ -419,11 +439,11 @@ function generateInterpretation(sri: SRIResult): string[] {
  */
 function getInterpretationByLevel(level: keyof typeof SRI_LEVELS): string {
   const descriptions = {
-    'very-low': '表现出较少的性压抑，对性相关内容和体验相对开放和接受',
-    'low': '在性心理方面相对健康，压抑程度较低',
-    'moderate': '处于正常范围内，既不过分压抑也不过分开放',
-    'high': '存在一定程度的性压抑，可能影响性体验和亲密关系',
-    'very-high': '存在较明显的性压抑，建议寻求专业心理咨询师的帮助'
+    'very-low': '相对较低，可能更少报告回避或压抑体验',
+    'low': '相对较低，但仍应以个人感受和情境为准',
+    'moderate': '处于本产品参考分布的中间区间，不代表医学上的正常范围',
+    'high': '相对较高；如果同时存在持续困扰或功能影响，可考虑寻求专业支持',
+    'very-high': '相对较高；如果让你持续困扰或感到不安全，建议联系合适的专业服务'
   };
   
   return descriptions[level];
@@ -438,8 +458,8 @@ function generateRecommendations(sri: SRIResult): string[] {
   const recommendations = [];
   
   if (sri.level === 'very-high' || sri.level === 'high') {
-    recommendations.push('考虑与专业的性治疗师或心理咨询师交流，探讨性心理健康话题。');
-    recommendations.push('尝试阅读一些关于性健康和性心理的科学读物，增进对性的科学认知。');
+    recommendations.push('较高的探索性显示值本身不代表需要治疗；如果你同时感到持续困扰或生活受影响，可考虑与合适的专业人员交流。');
+    recommendations.push('可以阅读可靠的性健康信息，按自己的节奏思考哪些经验或环境因素值得进一步了解。');
   }
   
   if (sri.dimensionScores.sexGuilt > 1) {
@@ -455,7 +475,7 @@ function generateRecommendations(sri: SRIResult): string[] {
   }
   
   // 通用建议
-  recommendations.push('与信任的伴侣或朋友开放地讨论性话题，减少孤立感。');
+  recommendations.push('在你感到安全且愿意的前提下，可与信任的人或专业人员讨论性健康；不需要为了得分而分享私人信息。');
   recommendations.push('记住这不是诊断工具，结果仅供自我了解和反思使用。');
   
   return recommendations;

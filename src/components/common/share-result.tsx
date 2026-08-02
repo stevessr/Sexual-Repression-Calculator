@@ -149,7 +149,7 @@ export function ShareResult({ session, className }: ShareResultProps) {
                   </div>
                   
                   <p className="text-sm text-muted-foreground">
-                    基于科学心理测量学的专业评估工具
+                    研究参考的性健康自我反思工具
                   </p>
                 </div>
               </CardContent>

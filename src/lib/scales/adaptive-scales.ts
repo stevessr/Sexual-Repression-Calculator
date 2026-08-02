@@ -286,38 +286,42 @@ export function getAdaptiveScales(demographics: Demographics): string[] {
       'teen_sexual_attitudes',  // 10题
       'sexual_cognition',       // 10题
       'sis_ses_adapted',        // 8题
-      'sos_screening'           // 5题 (保持原有)
-    ]; // 总计 33题
+      'sos_screening',          // 5题
+      'sexual_wellbeing_checkin' // 10题：近四周困扰与保护性环境
+    ]; // 总计 43题
   }
   
   // 无性经验的成年人
   if (sexualActivity === 0) {
     return [
-      'sexual_cognition',       // 10题
-      'sis_ses_adapted',        // 8题
-      'mosher_guilt',           // 10题 (简化版)
-      'kiss9_shame',            // 9题
-      'sos_screening'           // 5题
-    ]; // 总计 42题
+      'sexual_cognition',        // 10题
+      'sis_ses_adapted',         // 8题
+      'mosher_guilt',            // 10题（简化版）
+      'kiss9_shame',             // 9题
+      'sos_screening',           // 5题
+      'sexual_wellbeing_checkin' // 10题：近四周困扰与保护性环境
+    ]; // 总计 52题
   }
   
   // 有性经验但活跃度低的用户
   if (sexualActivity === 1) {
     return [
-      'sis_ses_sf',             // 14题
-      'mosher_guilt',           // 10题
-      'kiss9_shame',            // 9题
-      'sos_screening'           // 5题
-    ]; // 总计 38题
+      'sis_ses_sf',              // 14题
+      'mosher_guilt',            // 10题
+      'kiss9_shame',             // 9题
+      'sos_screening',           // 5题
+      'sexual_wellbeing_checkin' // 10题：近四周困扰与保护性环境
+    ]; // 总计 48题
   }
   
   // 默认标准量表（有一定性经验的用户）
   return [
-    'sis_ses_sf',               // 14题
-    'mosher_guilt',             // 10题
-    'kiss9_shame',              // 9题
-    'sos_screening'             // 5题
-  ]; // 总计 38题
+    'sis_ses_sf',                // 14题
+    'mosher_guilt',              // 10题
+    'kiss9_shame',               // 9题
+    'sos_screening',             // 5题
+    'sexual_wellbeing_checkin'   // 10题：近四周困扰与保护性环境
+  ]; // 总计 48题
 }
 
 /**
@@ -332,34 +336,37 @@ export function getAdaptiveFullScales(demographics: Demographics): string[] {
   // 14-17岁未成年人 - 扩展版但仍适合年龄
   if (ageValue === 0) {
     return [
-      'teen_sexual_attitudes',  // 10题
-      'sexual_cognition',       // 10题
-      'sis_ses_adapted',        // 8题
-      'sos_full',               // 21题 (完整版)
-      'kiss9_shame'             // 9题
-    ]; // 总计 58题
+      'teen_sexual_attitudes',   // 10题
+      'sexual_cognition',        // 10题
+      'sis_ses_adapted',         // 8题
+      'sos_full',                // 21题
+      'kiss9_shame',             // 9题
+      'sexual_wellbeing_checkin' // 10题：近四周困扰与保护性环境
+    ]; // 总计 68题
   }
   
   // 无性经验的成年人 - 适应版完整套装
   if (sexualActivity === 0) {
     return [
-      'sexual_cognition',       // 10题
-      'sis_ses_adapted',        // 8题
-      'mosher_guilt_full',      // 28题
-      'kiss9_shame',            // 9题
-      'sos_full',               // 21题
-      'bsas_brief'              // 23题
-    ]; // 总计 99题
+      'sexual_cognition',        // 10题
+      'sis_ses_adapted',         // 8题
+      'mosher_guilt_full',       // 28题
+      'kiss9_shame',             // 9题
+      'sos_full',                // 21题
+      'bsas_brief',              // 23题
+      'sexual_wellbeing_checkin' // 10题：近四周困扰与保护性环境
+    ]; // 总计 109题
   }
   
   // 默认完整版量表
   return [
-    'sis_ses_full',             // 45题
-    'mosher_guilt_full',        // 28题
-    'kiss9_shame',              // 9题
-    'sos_full',                 // 21题
-    'bsas_brief'                // 23题
-  ]; // 总计 126题
+    'sis_ses_full',              // 45题
+    'mosher_guilt_full',          // 28题
+    'kiss9_shame',                // 9题
+    'sos_full',                  // 21题
+    'bsas_brief',                // 23题
+    'sexual_wellbeing_checkin'   // 10题：近四周困扰与保护性环境
+  ]; // 总计 136题
 }
 
 /**

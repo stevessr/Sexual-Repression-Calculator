@@ -58,7 +58,7 @@ export function ShareView({ session }: ShareViewProps) {
                   SRI性压抑指数计算器
                 </h1>
                 <p className="text-xs text-muted-foreground">
-                  基于科学心理测量学的专业评估工具
+                  研究参考的性健康自我反思工具
                 </p>
               </div>
             </div>
@@ -85,10 +85,10 @@ export function ShareView({ session }: ShareViewProps) {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-psychology-primary mb-2">
-                  朋友分享了一个有趣的心理评估结果
+                  朋友分享了一个性健康自我反思结果
                 </h2>
                 <p className="text-muted-foreground text-lg">
-                  SRI性压抑指数是基于多个科学量表的专业心理评估工具
+                  这是研究参考的探索性显示值，用于观察回答模式，不是临床评估或诊断工具
                 </p>
               </div>
             </div>
@@ -140,13 +140,13 @@ export function ShareView({ session }: ShareViewProps) {
                 关于SRI指数
               </h3>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                性压抑指数(SRI)是一个综合性的心理健康指标，基于国际认可的心理测量量表开发。
-                它能够帮助人们更好地了解自己的性心理特征，促进心理健康和亲密关系的发展。
+                性压抑指数(SRI)是基于研究构念的探索性显示值，用于帮助人们观察自己的回答模式，
+                不代表经过验证的临床量表分数，也不能替代医疗或心理健康评估。
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>科学可靠的测量方法</span>
+                  <span>研究参考与透明边界</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
@@ -154,11 +154,11 @@ export function ShareView({ session }: ShareViewProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>个性化专业建议</span>
+                  <span>基于回答的自我反思提示</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>完全隐私保护</span>
+                  <span>本地处理与数据控制说明</span>
                 </div>
               </div>
             </div>
@@ -174,10 +174,10 @@ export function ShareView({ session }: ShareViewProps) {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-psychology-primary mb-2">
-                  想要获得属于自己的心理分析吗？
+                  想要获得属于自己的自我反思结果吗？
                 </h3>
                 <p className="text-muted-foreground mb-6">
-                  免费完成专业的性心理健康评估，获得个性化的分析报告和改善建议
+                  了解性健康和自我反思工具，观察自己的回答模式并获得温和的行动提示
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button 
@@ -211,9 +211,9 @@ export function ShareView({ session }: ShareViewProps) {
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Brain className="w-6 h-6 text-blue-600" />
               </div>
-              <h4 className="font-semibold mb-2">科学专业</h4>
+              <h4 className="font-semibold mb-2">研究参考</h4>
               <p className="text-sm text-muted-foreground">
-                基于SIS/SES、Mosher等国际认可量表
+                参考 SIS/SES、Mosher 等研究构念；本中文题目尚未完成独立信效度验证
               </p>
             </CardContent>
           </Card>

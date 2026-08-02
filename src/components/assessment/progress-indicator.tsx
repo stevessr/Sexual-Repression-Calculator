@@ -113,7 +113,7 @@ export function ProgressIndicator({
  */
 function getMotivationalMessage(progress: number): string {
   if (progress < 20) {
-    return '请诚实回答每个问题，这将帮助我们提供更准确的分析。';
+    return '请按自己的感受回答每个问题，这将帮助您更完整地回顾回答模式。';
   }
   if (progress < 40) {
     return '做得很好！请继续保持，您的每个回答都很重要。';
@@ -122,7 +122,7 @@ function getMotivationalMessage(progress: number): string {
     return '已经过半了！感谢您的耐心，我们正在收集宝贵的信息。';
   }
   if (progress < 80) {
-    return '快要完成了！您的坚持让我们能够提供更准确的分析。';
+    return '快要完成了！您的坚持能让自我反思包含更多信息。';
   }
   if (progress < 95) {
     return '最后几道题了！您的认真态度令人钦佩。';
