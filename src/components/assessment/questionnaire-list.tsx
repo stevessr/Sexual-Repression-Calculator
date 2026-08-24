@@ -16,7 +16,6 @@ import {
   ALL_SCALES,
   QUICK_ASSESSMENT_SCALES,
   INCREMENTAL_ASSESSMENT_SCALES,
-  FULL_ASSESSMENT_SCALES,
   getAdaptiveScales,
   getAdaptiveFullScales,
   isMinor,
@@ -154,16 +153,25 @@ export function QuestionnaireList({
       try {
         return getAdaptiveFullScales(demographics);
       } catch (e) {
-        return FULL_ASSESSMENT_SCALES;
+        return INCREMENTAL_ASSESSMENT_SCALES;
       }
     }
     return INCREMENTAL_ASSESSMENT_SCALES;
   };
-
   const scaleIds = useMemo(() => getScalesForUser(), [type, demographics]);
   const userGroup = getUserGroupDescription(demographics);
-  const allQuestions = useMemo(() => scaleIds.flatMap(scaleId => ALL_SCALES[scaleId]?.questions ?? []), [scaleIds]);
-
+  
+  // Deduplicate questions by text content - keep first occurrence
+  const allQuestions = useMemo(() => {
+    const questions = scaleIds.flatMap(scaleId => ALL_SCALES[scaleId]?.questions ?? []);
+    const seen = new Set<string>();
+    return questions.filter(q => {
+      const key = q.text.trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [scaleIds]);
   const [currentScaleIndex, setCurrentScaleIndex] = useState<number>(0);
   const currentScaleId = scaleIds[currentScaleIndex];
   const [scalePages, setScalePages] = useState<Record<string, number>>({});
