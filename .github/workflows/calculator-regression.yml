@@ -3,6 +3,7 @@ name: Calculator regression
 on:
   push:
     branches:
+      - main
       - fix/scoring-calculation-accuracy-20261111
   pull_request:
 
