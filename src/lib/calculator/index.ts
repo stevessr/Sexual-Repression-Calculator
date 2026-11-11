@@ -6,7 +6,7 @@
 import {AssessmentResults, DimensionScores, NormativeData, Response, ScaleScore, SRI_LEVELS, SRIResult} from '@/types';
 import {ALL_SCALES} from '@/lib/scales';
 import {calculateClinicalContext} from '@/lib/medical-context';
-import {adaptedInhibitionContrast, rangeBasedDisplayZ, scoreQuestions, selectScaleVersion, standardize} from './scoring';
+import {adaptedInhibitionContrast, rangeBasedDisplayZ, scoreQuestions, selectScaleVersion, standardize, referenceOrRangeZ} from './scoring';
 
 /**
  * 标准正态分布累积分布函数 (CDF)
@@ -137,15 +137,7 @@ function referenceZ(
   norms: NormativeData,
   theoreticalRange: readonly [number, number],
 ): number {
-  // A descriptive, published population norm cannot be transferred to
-  // this separately adapted questionnaire. The default reference set
-  // contains no real sample, so use only the theoretical item bounds.
-  const mean = norms.means[key];
-  const std = norms.standardDeviations[key];
-  return norms.sampleSize > 0 && Number.isFinite(mean) &&
-    Number.isFinite(std) && std > 0
-    ? calculateZScore(raw, mean, std)
-    : rangeBasedDisplayZ(raw, theoreticalRange);
+  return referenceOrRangeZ(raw, key, norms, theoreticalRange);
 }
 
 export function calculateSisSeScores(responses: Response[], norms: NormativeData) {
