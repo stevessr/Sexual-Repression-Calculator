@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   adaptedInhibitionContrast,
   rangeBasedDisplayZ,
+  referenceOrRangeZ,
   scoreQuestions,
   selectScaleVersion,
   standardize,
@@ -74,4 +75,25 @@ test('adapted contrast is invariant to different inhibition/excitation item coun
   assert.equal(adaptedInhibitionContrast(inhibition.average, excitation.average), 1);
   assert.equal(adaptedInhibitionContrast(2, 4), -1);
   assert.equal(adaptedInhibitionContrast(3, 3), 0);
+});
+
+test('illustrative built-in reference numbers are ignored without a real sample', () => {
+  const illustrative = {
+    sampleSize: 0,
+    means: { score: 400 },
+    standardDeviations: { score: 0.01 },
+  };
+  assert.equal(referenceOrRangeZ(3, 'score', illustrative, [1, 5]), 0);
+  assert.equal(referenceOrRangeZ(5, 'score', illustrative, [1, 5]), 2);
+});
+
+test('explicit reference moments remain opt-in and invalid references fall back to bounds', () => {
+  const reference = {
+    sampleSize: 100,
+    means: { score: 3 },
+    standardDeviations: { score: 0.5 },
+  };
+  assert.equal(referenceOrRangeZ(4, 'score', reference, [1, 5]), 2);
+  assert.equal(referenceOrRangeZ(1, 'missing', reference, [1, 5]), -2);
+  assert.equal(referenceOrRangeZ(3, 'score', { ...reference, standardDeviations: { score: 0 } }, [1, 5]), 0);
 });
