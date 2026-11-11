@@ -1,0 +1,25 @@
+name: Calculator regression
+
+on:
+  push:
+    branches:
+      - fix/scoring-calculation-accuracy-20261111
+  pull_request:
+
+jobs:
+  calculator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:calculator
+      - run: pnpm test:references
+      - run: pnpm type-check
+      - run: pnpm build
