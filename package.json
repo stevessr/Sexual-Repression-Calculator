@@ -10,6 +10,7 @@
     "cf:deploy": "npm install --legacy-peer-deps && npm run build:cloudflare",
     "type-check": "tsc -b --pretty",
     "lint": "tsc -b --pretty",
+    "test:calculator": "node --experimental-strip-types --test tests/calculator-scoring.test.ts",
     "test:references": "node --experimental-strip-types --test tests/medical-references.test.ts tests/medical-context.test.ts tests/sexual-wellbeing.test.ts",
     "preview": "rsbuild preview"
   },

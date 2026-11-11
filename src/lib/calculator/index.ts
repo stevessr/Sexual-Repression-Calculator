@@ -6,6 +6,7 @@
 import {AssessmentResults, DimensionScores, NormativeData, Response, ScaleScore, SRI_LEVELS, SRIResult} from '@/types';
 import {ALL_SCALES} from '@/lib/scales';
 import {calculateClinicalContext} from '@/lib/medical-context';
+import {adaptedInhibitionContrast, rangeBasedDisplayZ, scoreQuestions, selectScaleVersion, standardize} from './scoring';
 
 /**
  * 标准正态分布累积分布函数 (CDF)
@@ -40,42 +41,7 @@ export function calculateRawScore(responses: Response[], scaleId: string): numbe
     console.warn(`Unknown scale: ${scaleId}`);
     return 0;
   }
-  
-  const scaleResponses = responses.filter(r => 
-    scale.questions.some(q => q.id === r.questionId)
-  );
-  
-  // 如果没有该量表的回答，返回 0
-  if (scaleResponses.length === 0) {
-    return 0;
-  }
-  
-  let totalScore = 0;
-  
-  for (const response of scaleResponses) {
-    const question = scale.questions.find(q => q.id === response.questionId);
-    if (question) {
-      // 验证回答值的有效性：允许滑块产生的小数（保留精度），仅在超出题目定义的最小/最大值时截断
-      const validValues = question.options.map(o => o.value);
-      const minValue = Math.min(...validValues);
-      const maxValue = Math.max(...validValues);
-      let rawValue = Number.isFinite(response.value) ? response.value : minValue;
-      if (rawValue < minValue || rawValue > maxValue) {
-        console.warn(`Response value ${response.value} for question ${question.id} out of range [${minValue}, ${maxValue}], clamping.`);
-        rawValue = Math.max(minValue, Math.min(maxValue, rawValue));
-      }
-      
-      // 处理反向计分
-      let score = rawValue;
-      if (question.reverse) {
-        // reverse using the observed/clamped raw value and scale bounds
-        score = maxValue + minValue - score;
-      }
-      totalScore += score;
-    }
-  }
-  
-  return totalScore;
+  return scoreQuestions(responses, scale.questions).rawScore;
 }
 
 /**
@@ -86,8 +52,7 @@ export function calculateRawScore(responses: Response[], scaleId: string): numbe
  * @returns z 分数
  */
 export function calculateZScore(rawScore: number, mean: number, stdDev: number): number {
-  if (stdDev === 0) return 0;
-  return (rawScore - mean) / stdDev;
+  return standardize(rawScore, mean, stdDev);
 }
 
 /**
@@ -157,44 +122,54 @@ export function getDefaultNorms(): NormativeData {
  * @param norms 常模数据
  * @returns SIS/SES分数对象
  */
+function selectedForm(
+  responses: Response[],
+  briefId: 'sis_ses_sf' | 'mosher_guilt' | 'sos_screening',
+  fullId: 'sis_ses_full' | 'mosher_guilt_full' | 'sos_full',
+): string | null {
+  const version = selectScaleVersion(responses, ALL_SCALES[briefId].questions, ALL_SCALES[fullId].questions);
+  return version === 'full' ? fullId : version === 'short' ? briefId : null;
+}
+
+function referenceZ(
+  raw: number,
+  key: string,
+  norms: NormativeData,
+  fallbackMean: number,
+  fallbackSD: number,
+): number {
+  return calculateZScore(
+    raw,
+    norms.means[key] ?? fallbackMean,
+    norms.standardDeviations[key] ?? fallbackSD,
+  );
+}
+
 export function calculateSisSeScores(responses: Response[], norms: NormativeData) {
-  // 动态获取 SES 问题（支持不同量表版本）
-  const sesResponses = responses.filter(r => r.questionId.startsWith('ses_'));
-  const sesRaw = sesResponses.reduce((sum, r) => sum + r.value, 0);
-  
-  // 动态获取 SIS1 问题
-  const sis1Responses = responses.filter(r => r.questionId.startsWith('sis1_'));
-  const sis1Raw = sis1Responses.reduce((sum, r) => sum + r.value, 0);
-  
-  // 动态获取 SIS2 问题
-  const sis2Responses = responses.filter(r => r.questionId.startsWith('sis2_'));
-  const sis2Raw = sis2Responses.reduce((sum, r) => sum + r.value, 0);
-  
-  // SIS 总分
-  const sisTotal = sis1Raw + sis2Raw;
-  
-  // 根据题目数量调整常模（快测版 vs 完整版）
-  const sesCount = sesResponses.length;
-  const sisCount = sis1Responses.length + sis2Responses.length;
-  
-  // 动态调整均值和标准差
-  const sesMean = sesCount <= 4 ? 16.8 : 42.8; // 快测版 vs 完整版
-  const sesStd = sesCount <= 4 ? 3.7 : 9.2;
-  const sisMean = sisCount <= 10 ? 35.2 : 87.5; // 调整完整版的均值
-  const sisStd = sisCount <= 10 ? 8.9 : 18.3;
-  
-  // 计算z分数
-  const sesZ = calculateZScore(sesRaw, norms.means['ses_total'] || sesMean, norms.standardDeviations['ses_total'] || sesStd);
-  const sisZ = calculateZScore(sisTotal, norms.means['sis_total'] || sisMean, norms.standardDeviations['sis_total'] || sisStd);
-  
+  const form = selectedForm(responses, 'sis_ses_sf', 'sis_ses_full');
+  const questions = form ? ALL_SCALES[form].questions : [];
+  const ses = scoreQuestions(responses, questions.filter(q => q.id.startsWith('ses_')));
+  const sis1 = scoreQuestions(responses, questions.filter(q => q.id.startsWith('sis1_')));
+  const sis2 = scoreQuestions(responses, questions.filter(q => q.id.startsWith('sis2_')));
+  const isFull = form === 'sis_ses_full';
+  const sisTotal = sis1.rawScore + sis2.rawScore;
+  const sesZ = form ? referenceZ(
+    ses.rawScore, isFull ? 'sis_ses_full_ses' : 'ses_total',
+    norms, isFull ? 42.8 : 16.8, isFull ? 9.2 : 3.7,
+  ) : 0;
+  const sisZ = form ? referenceZ(
+    sisTotal, isFull ? 'sis_ses_full_sis' : 'sis_total',
+    norms, isFull ? 87.5 : 35.2, isFull ? 18.3 : 8.9,
+  ) : 0;
+
   return {
-    sesRaw,
+    sesRaw: ses.rawScore,
     sesZ,
-    sis1Raw,
-    sis2Raw,
+    sis1Raw: sis1.rawScore,
+    sis2Raw: sis2.rawScore,
     sisTotal,
     sisZ,
-    sisOverSes: sisZ - sesZ // SIS相对SES优势
+    sisOverSes: (sisZ - sesZ) / Math.SQRT2
   };
 }
 
@@ -204,81 +179,83 @@ export function calculateSisSeScores(responses: Response[], norms: NormativeData
  * @param norms 常模数据 
  * @returns 四维度分数
  */
-export function calculateDimensionScores(responses: Response[], norms: NormativeData): DimensionScores {
-  // 1. SOS反向分数 - 动态检测使用的量表版本
-  let sosRaw = 0;
-  let sosZ = 0;
-  
-  // 尝试完整版SOS
-  const sosFullResponses = responses.filter(r => r.questionId.startsWith('sos_'));
-  if (sosFullResponses.length > 5) {
-    // 完整版 SOS
-    sosRaw = sosFullResponses.reduce((sum, r) => sum + r.value, 0);
-    sosZ = calculateZScore(sosRaw, norms.means['sos_full'] || 63.0, norms.standardDeviations['sos_full'] || 12.8);
-  } else if (sosFullResponses.length > 0) {
-    // 筛查版 SOS
-    sosRaw = sosFullResponses.reduce((sum, r) => sum + r.value, 0);
-    sosZ = calculateZScore(sosRaw, norms.means['sos_screening'] || 15.3, norms.standardDeviations['sos_screening'] || 4.6);
-  }
-  
-  // 2. 性内疚分数 - 动态检测版本
-  let guiltRaw = 0;
-  let guiltZ = 0;
-  
-  const guiltResponses = responses.filter(r => r.questionId.startsWith('mg_'));
-  if (guiltResponses.length > 10) {
-    // 完整版 Mosher
-    guiltRaw = guiltResponses.reduce((sum, r) => sum + r.value, 0);
-    guiltZ = calculateZScore(guiltRaw, norms.means['mosher_guilt_full'] || 62.7, norms.standardDeviations['mosher_guilt_full'] || 19.2);
-  } else if (guiltResponses.length > 0) {
-    // 简版 Mosher
-    guiltRaw = guiltResponses.reduce((sum, r) => sum + r.value, 0);
-    guiltZ = calculateZScore(guiltRaw, norms.means['mosher_guilt'] || 25.6, norms.standardDeviations['mosher_guilt'] || 7.8);
-  }
-  
-  // 3. 性羞耻分数（KISS-9 保持不变，或者青少年性态度量表）
-  let shameZ = 0;
-  const shameResponses = responses.filter(r => r.questionId.startsWith('ks_'));
-  const teenAttitudeResponses = responses.filter(r => r.questionId.startsWith('tsa_'));
-  
-  if (shameResponses.length > 0) {
-    // 使用 KISS-9 量表
-    const shameRaw = shameResponses.reduce((sum, r) => sum + r.value, 0);
-    shameZ = calculateZScore(shameRaw, norms.means['kiss9_shame'] || 18.7, norms.standardDeviations['kiss9_shame'] || 6.4);
-  } else if (teenAttitudeResponses.length > 0) {
-    // 使用青少年性态度量表作为羞耻维度替代
-    const teenRaw = teenAttitudeResponses.reduce((sum, r) => sum + r.value, 0);
-    shameZ = calculateZScore(teenRaw, norms.means['teen_sexual_attitudes'] || 25.0, norms.standardDeviations['teen_sexual_attitudes'] || 6.2);
-  }
-  
-  // 4. SIS 相对 SES 优势（或性认知适应版）
-  let sisOverSes = 0;
-  const sexCognitionResponses = responses.filter(r => r.questionId.startsWith('sc_'));
-  const sisAdaptedResponses = responses.filter(r => r.questionId.startsWith('sisa_'));
-  
-  if (sexCognitionResponses.length > 0 || sisAdaptedResponses.length > 0) {
-    // 对于无性经验用户，使用性认知量表
-    const cognitionRaw = sexCognitionResponses.reduce((sum, r) => sum + r.value, 0);
-    const adaptedRaw = sisAdaptedResponses.reduce((sum, r) => sum + r.value, 0);
-    const totalRaw = cognitionRaw + adaptedRaw;
-    
-    if (totalRaw > 0) {
-      const mean = norms.means['sexual_cognition'] || 28.5;
-      const std = norms.standardDeviations['sexual_cognition'] || 7.1;
-      sisOverSes = calculateZScore(totalRaw, mean, std);
-    }
-  } else {
-    // 标准 SIS/SES 计算
-    const sisSeScores = calculateSisSeScores(responses, norms);
-    sisOverSes = sisSeScores.sisOverSes;
-  }
-  
-  return {
-    sosReversed: sosZ, // SOS 反向（越高越恐惧）
-    sexGuilt: guiltZ,
-    sexualShame: shameZ,
-    sisOverSes: sisOverSes
+function calculateDimensionsWithCoverage(
+  responses: Response[],
+  norms: NormativeData,
+): { scores: DimensionScores; present: Array<keyof DimensionScores> } {
+  const scores: DimensionScores = {
+    sosReversed: 0,
+    sexGuilt: 0,
+    sexualShame: 0,
+    sisOverSes: 0,
   };
+  const present: Array<keyof DimensionScores> = [];
+  const add = (dimension: keyof DimensionScores, value: number) => {
+    if (Number.isFinite(value)) {
+      scores[dimension] = value;
+      present.push(dimension);
+    }
+  };
+
+  const sosForm = selectedForm(responses, 'sos_screening', 'sos_full');
+  if (sosForm) {
+    const score = scoreQuestions(responses, ALL_SCALES[sosForm].questions);
+    const isFull = sosForm === 'sos_full';
+    add('sosReversed', referenceZ(
+      score.rawScore, isFull ? 'sos_full' : 'sos_screening',
+      norms, isFull ? 63.0 : 15.3, isFull ? 12.8 : 4.6,
+    ));
+  }
+
+  const guiltForm = selectedForm(responses, 'mosher_guilt', 'mosher_guilt_full');
+  if (guiltForm) {
+    const score = scoreQuestions(responses, ALL_SCALES[guiltForm].questions);
+    const isFull = guiltForm === 'mosher_guilt_full';
+    add('sexGuilt', referenceZ(
+      score.rawScore, isFull ? 'mosher_guilt_full' : 'mosher_guilt',
+      norms, isFull ? 62.7 : 25.6, isFull ? 19.2 : 7.8,
+    ));
+  }
+
+  const shame = scoreQuestions(responses, ALL_SCALES.kiss9_shame.questions);
+  const teenAttitudes = scoreQuestions(responses, ALL_SCALES.teen_sexual_attitudes.questions);
+  if (shame.complete) {
+    add('sexualShame', referenceZ(shame.rawScore, 'kiss9_shame', norms, 18.7, 6.4));
+  } else if (teenAttitudes.complete) {
+    add('sexualShame', referenceZ(
+      teenAttitudes.rawScore, 'teen_sexual_attitudes', norms, 25, 6.2,
+    ));
+  }
+
+  const adaptedQuestions = ALL_SCALES.sis_ses_adapted.questions;
+  const adapted = scoreQuestions(responses, adaptedQuestions);
+  if (adapted.complete) {
+    const excitation = scoreQuestions(responses, adaptedQuestions.filter(q =>
+      ['sisa_1', 'sisa_2', 'sisa_3'].includes(q.id),
+    ));
+    const inhibition = scoreQuestions(responses, adaptedQuestions.filter(q =>
+      ['sisa_4', 'sisa_5', 'sisa_6', 'sisa_7', 'sisa_8'].includes(q.id),
+    ));
+    add('sisOverSes', adaptedInhibitionContrast(inhibition.average, excitation.average));
+  } else if (adapted.answered === 0) {
+    const sisForm = selectedForm(responses, 'sis_ses_sf', 'sis_ses_full');
+    if (sisForm) {
+      add('sisOverSes', calculateSisSeScores(responses, norms).sisOverSes);
+    } else {
+      const cognition = scoreQuestions(responses, ALL_SCALES.sexual_cognition.questions);
+      if (cognition.complete) {
+        add('sisOverSes', referenceZ(
+          cognition.rawScore, 'sexual_cognition', norms, 28.5, 7.1,
+        ));
+      }
+    }
+  }
+
+  return { scores, present };
+}
+
+export function calculateDimensionScores(responses: Response[], norms: NormativeData): DimensionScores {
+  return calculateDimensionsWithCoverage(responses, norms).scores;
 }
 
 /**
@@ -286,38 +263,33 @@ export function calculateDimensionScores(responses: Response[], norms: Normative
  * @param dimensionScores 四维度分数
  * @returns SRI 结果对象
  */
-export function calculateSRI(dimensionScores: DimensionScores): SRIResult {
-  // 等权重合成四维度 z 分数
-  const compositeZ = (dimensionScores.sosReversed + dimensionScores.sexGuilt + 
-                    dimensionScores.sexualShame + dimensionScores.sisOverSes) / 4;
-  
-  // 转换为 0-100 分数（使用标准正态 CDF）
+export function calculateSRI(
+  dimensionScores: DimensionScores,
+  presentDimensions: readonly (keyof DimensionScores)[] = [
+    'sosReversed', 'sexGuilt', 'sexualShame', 'sisOverSes',
+  ],
+): SRIResult {
+  const unique = [...new Set(presentDimensions)];
+  const values = unique.map(key => dimensionScores[key]).filter(Number.isFinite);
+  const compositeZ = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
   const percentile = normalCDF(compositeZ) * 100;
   const totalScore = Math.round(Math.max(0, Math.min(100, percentile)));
-  
-  // 确定 SRI 等级
+
   let level: keyof typeof SRI_LEVELS = 'moderate';
-  let found = false;
-  for (const [levelKey, levelData] of Object.entries(SRI_LEVELS)) {
-    if (totalScore >= levelData.min && totalScore < levelData.max) {
-      level = levelKey as keyof typeof SRI_LEVELS;
-      found = true;
+  for (const [key, definition] of Object.entries(SRI_LEVELS)) {
+    if (totalScore >= definition.min && totalScore < definition.max) {
+      level = key as keyof typeof SRI_LEVELS;
       break;
     }
   }
-  // handle boundary case when score equals the top boundary (e.g., 100)
-  if (!found) {
-    const levelKeys = Object.keys(SRI_LEVELS) as Array<keyof typeof SRI_LEVELS>;
-    level = levelKeys[levelKeys.length - 1]; // assign highest level
-  }
-  
+
   return {
     totalScore,
     zScore: compositeZ,
     percentile,
     level,
     dimensionScores,
-    scaleScores: [] // 会在主计算函数中填充
+    scaleScores: []
   };
 }
 
@@ -339,45 +311,54 @@ export function calculateAssessmentResults(
   
   const normsData = norms || getDefaultNorms();
   
-  // 计算各量表分数（只计算有数据的量表）
+  // Only one version per overlapping scale family contributes to reported scores.
+  const families = [
+    ['sis_ses_sf', 'sis_ses_full'],
+    ['mosher_guilt', 'mosher_guilt_full'],
+    ['sos_screening', 'sos_full'],
+  ] as const;
+  const excluded = new Set<string>();
+  for (const [briefId, fullId] of families) {
+    const full = scoreQuestions(responses, ALL_SCALES[fullId].questions);
+    if (full.answered === 0) continue;
+    const selected = selectedForm(responses, briefId, fullId);
+    if (!selected) throw new Error('Insufficient data for SRI calculation');
+    excluded.add(selected === briefId ? fullId : briefId);
+  }
+
   const scaleScores: ScaleScore[] = [];
-  
   for (const scaleId of Object.keys(ALL_SCALES)) {
     const scale = ALL_SCALES[scaleId];
-    if (scale?.includeInSRI === false) {
-      continue;
-    }
+    if (!scale || excluded.has(scaleId)) continue;
+    const scored = scoreQuestions(responses, scale.questions);
+    if (scored.answered === 0) continue;
+    if (!scored.complete) throw new Error('Insufficient data for SRI calculation');
+    if (scale.includeInSRI === false) continue;
 
-    const rawScore = calculateRawScore(responses, scaleId);
-
-    // 只有当量表有回答时才计算分数
-    if (rawScore > 0) {
-      const meanKey = `${scaleId.replace('_sf', '_total')}`;
-      const mean = normsData.means[meanKey] || normsData.means[scaleId] || 0;
-      const stdDev = normsData.standardDeviations[meanKey] || normsData.standardDeviations[scaleId] || 1;
-
-      const zScore = calculateZScore(rawScore, mean, stdDev);
-      const percentile = normalCDF(zScore) * 100;
-
-      scaleScores.push({
-        scaleId,
-        rawScore,
-        zScore,
-        percentile: Math.max(0, Math.min(100, Math.round(percentile)))
-      });
-    }
+    const meanKey = scaleId.replace('_sf', '_total');
+    const mean = normsData.means[meanKey] ?? normsData.means[scaleId];
+    const stdDev = normsData.standardDeviations[meanKey] ?? normsData.standardDeviations[scaleId];
+    const zScore = Number.isFinite(mean) && Number.isFinite(stdDev) && stdDev > 0
+      ? calculateZScore(scored.rawScore, mean, stdDev)
+      : rangeBasedDisplayZ(scored.rawScore, scale.scoring.range);
+    const percentile = normalCDF(zScore) * 100;
+    scaleScores.push({
+      scaleId,
+      rawScore: scored.rawScore,
+      zScore,
+      percentile: Math.max(0, Math.min(100, Math.round(percentile)))
+    });
   }
-  
-  // 验证是否有足够的数据进行计算
+
   if (scaleScores.length === 0) {
     throw new Error('Insufficient data for SRI calculation');
   }
-  
-  // 计算四维度分数
-  const dimensionScores = calculateDimensionScores(responses, normsData);
-  
-  // 计算 SRI 指数
-  const sri = calculateSRI(dimensionScores);
+
+  const { scores: dimensionScores, present } = calculateDimensionsWithCoverage(responses, normsData);
+  if (present.length === 0) {
+    throw new Error('Insufficient data for SRI calculation');
+  }
+  const sri = calculateSRI(dimensionScores, present);
   sri.scaleScores = scaleScores;
   
   const interpretation = generateInterpretation(sri);
