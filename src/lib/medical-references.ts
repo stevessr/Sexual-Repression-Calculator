@@ -115,6 +115,61 @@ export const MEDICAL_REFERENCES = Object.freeze([
       'This research paper operationalizes sexual excitation and inhibition constructs related to the Dual Control Model. The scales are research measures only and are not diagnostic tools or a substitute for clinical evaluation.',
     usedFor: ['research measurement context', 'SIS/SES construct background'],
   }),
+  freezeReference({
+    id: 'dual-control-scoping-review-2023',
+    title: 'The Dual Control Model of Sexual Response: A Scoping Review, 2009–2022',
+    organization: 'The Journal of Sex Research',
+    year: 2023,
+    type: 'research',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/37267113/',
+    summary:
+      'A review of 152 studies describes excitation and inhibition as distinct, interacting research constructs across different outcomes. Their interaction should not be collapsed into a diagnostic label.',
+    usedFor: ['dual-control evidence update', 'construct separation'],
+  }),
+  freezeReference({
+    id: 'sis-ses-sf-spain-2024',
+    title: 'Validity and Reliability Evidence and Norms for the Spanish Version of the Sexual Inhibition/Sexual Excitation Scales–Short Form',
+    organization: 'Sierra, Cervilla, Álvarez-Muelas and Sánchez-Fuentes',
+    year: 2024,
+    type: 'research',
+    url: 'https://doi.org/10.7334/psicothema2023.189',
+    summary:
+      'Validation of the SIS/SES-SF three-factor structure in 2,223 Spanish adults. Age- and sex-specific standardized scores are specific to that instrument and population; they cannot be transferred to this independently adapted Chinese question bank.',
+    usedFor: ['three separate excitation/inhibition constructs', 'norm-transfer limitations'],
+  }),
+  freezeReference({
+    id: 'sds3-multinational-2024',
+    title: 'The short version of the Sexual Distress Scale (SDS-3): Measurement invariance across countries, gender identities, and sexual orientations',
+    organization: 'International Journal of Clinical and Health Psychology',
+    year: 2024,
+    type: 'research',
+    url: 'https://doi.org/10.1016/j.ijchp.2024.100461',
+    summary:
+      'A multinational analysis across 42 countries and 26 languages examined the measurement of sexual distress. It supports distinguishing experienced distress from sexual attitudes or frequency of activity; this app does not reproduce or claim to validate SDS-3 items.',
+    usedFor: ['distress separated from attitudes', 'cross-population measurement context'],
+  }),
+  freezeReference({
+    id: 'sexual-distress-collectivistic-2025',
+    title: 'Development and validation of the sexual distress scale: results from a collectivistic culture',
+    organization: 'Husain and Jahrami, BMC Psychology',
+    year: 2025,
+    type: 'research',
+    url: 'https://doi.org/10.1186/s40359-025-02443-3',
+    summary:
+      'An eight-item measure of sexual distress was developed in a sample of 656 Pakistani adults. Findings illustrate the influence of context and the need for new local validation before applying norms to other cultures.',
+    usedFor: ['cultural context', 'separate self-reported distress'],
+  }),
+  freezeReference({
+    id: 'cosmin-sexual-health-proms-2026',
+    title: 'Measurement properties of patient-reported outcome measures for sexual health in the general population: a systematic review following the COSMIN 2.0 guidelines',
+    organization: 'Shang, Yuan, Shen et al., Health and Quality of Life Outcomes',
+    year: 2026,
+    type: 'research',
+    url: 'https://doi.org/10.1186/s12955-026-02535-7',
+    summary:
+      'The 2026 COSMIN systematic review assessed 27 sexual-health patient-reported outcome measures and found important gaps in content validity and responsiveness. Research support for one questionnaire cannot validate a new composite SRI score.',
+    usedFor: ['measurement quality', 'limits of composite SRI validity', 'future validation design'],
+  }),
 ] as const);
 
 /** Backwards-friendly camel-case export for consumers that prefer data nouns. */
