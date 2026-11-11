@@ -189,14 +189,14 @@ export default function Science() {
                     <div>1. <strong>性观感反向</strong>：SOS分数反向转换，高分表示对性刺激的消极反应</div>
                     <div>2. <strong>性内疚</strong>：Mosher量表原始分数，反映道德化性压抑</div>
                     <div>3. <strong>性羞耻</strong>：KISS-9题目反映性相关自我评价和羞耻体验，不对身份或取向作判断</div>
-                    <div>4. <strong>抑制优势</strong>：(SIS1+SIS2-SES)差值，反映研究模型中的抑制相对兴奋优势</div>
+                    <div>4. <strong>抑制优势</strong>：分别计算 SIS1、SIS2 与 SES 的每题均值，再比较抑制与兴奋倾向；不同题数不会直接相减</div>
                   </div>
                 </div>
                 <div className="bg-muted/30 p-4 rounded-lg">
                   <h4 className="font-semibold text-foreground mb-2">z分数标准化</h4>
                   <p className="text-sm text-muted-foreground">
-                    当前内置的参考均值只用于演示性相对比较，并不是代表性常模，也没有经过本地人群验证。
-                    因此不能据此推导医学百分位、正常范围或临床切点。
+                    当前默认按题目理论取值范围生成探索性显示分数，不将其他语言量表的均值与标准差用作中文常模。
+                    仅在明确提供外部参考数据时采用相应的 z 标准化；显示值不能视为医学百分位、正常范围或临床切点。
                   </p>
                 </div>
                 <div className="bg-muted/30 p-4 rounded-lg">
@@ -337,7 +337,7 @@ export default function Science() {
                 <div className="space-y-3 text-sm">
                   <div className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 bg-psychology-warning rounded-full mt-2 flex-shrink-0"></div>
-                    <span><strong>常模限制：</strong>本版本没有代表性中文常模；内部参考值仅用于保持产品显示兼容，不能当作人群标准</span>
+                    <span><strong>常模限制：</strong>本版本没有代表性中文常模；默认以题目理论范围映射显示分数，不将其他人群参考值当作本地常模</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 bg-psychology-warning rounded-full mt-2 flex-shrink-0"></div>
