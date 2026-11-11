@@ -87,6 +87,7 @@ export interface DimensionScores {
 
 // SRI 指数计算结果
 export interface SRIResult {
+  scoringVersion?: string; // distinguishes results produced by different experimental formulas
   totalScore: number; // 0-100
   zScore: number;
   percentile: number;
