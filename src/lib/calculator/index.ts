@@ -135,14 +135,17 @@ function referenceZ(
   raw: number,
   key: string,
   norms: NormativeData,
-  fallbackMean: number,
-  fallbackSD: number,
+  theoreticalRange: readonly [number, number],
 ): number {
-  return calculateZScore(
-    raw,
-    norms.means[key] ?? fallbackMean,
-    norms.standardDeviations[key] ?? fallbackSD,
-  );
+  // A descriptive, published population norm cannot be transferred to
+  // this separately adapted questionnaire. The default reference set
+  // contains no real sample, so use only the theoretical item bounds.
+  const mean = norms.means[key];
+  const std = norms.standardDeviations[key];
+  return norms.sampleSize > 0 && Number.isFinite(mean) &&
+    Number.isFinite(std) && std > 0
+    ? calculateZScore(raw, mean, std)
+    : rangeBasedDisplayZ(raw, theoreticalRange);
 }
 
 export function calculateSisSeScores(responses: Response[], norms: NormativeData) {
@@ -155,12 +158,21 @@ export function calculateSisSeScores(responses: Response[], norms: NormativeData
   const sisTotal = sis1.rawScore + sis2.rawScore;
   const sesZ = form ? referenceZ(
     ses.rawScore, isFull ? 'sis_ses_full_ses' : 'ses_total',
-    norms, isFull ? 42.8 : 16.8, isFull ? 9.2 : 3.7,
+    norms, [ses.total, 5 * ses.total],
   ) : 0;
+  const inhibitionCount = sis1.total + sis2.total;
   const sisZ = form ? referenceZ(
     sisTotal, isFull ? 'sis_ses_full_sis' : 'sis_total',
-    norms, isFull ? 87.5 : 35.2, isFull ? 18.3 : 8.9,
+    norms, [inhibitionCount, 5 * inhibitionCount],
   ) : 0;
+  const hasMatchedNorms = form && norms.sampleSize > 0 &&
+    Number.isFinite(norms.means[isFull ? 'sis_ses_full_ses' : 'ses_total']) &&
+    Number.isFinite(norms.means[isFull ? 'sis_ses_full_sis' : 'sis_total']) &&
+    norms.standardDeviations[isFull ? 'sis_ses_full_ses' : 'ses_total'] > 0 &&
+    norms.standardDeviations[isFull ? 'sis_ses_full_sis' : 'sis_total'] > 0;
+  const contrast = !form ? 0 : hasMatchedNorms
+    ? (sisZ - sesZ) / Math.SQRT2
+    : adaptedInhibitionContrast((sis1.average + sis2.average) / 2, ses.average);
 
   return {
     sesRaw: ses.rawScore,
@@ -169,7 +181,7 @@ export function calculateSisSeScores(responses: Response[], norms: NormativeData
     sis2Raw: sis2.rawScore,
     sisTotal,
     sisZ,
-    sisOverSes: (sisZ - sesZ) / Math.SQRT2
+    sisOverSes: contrast
   };
 }
 
@@ -203,7 +215,7 @@ function calculateDimensionsWithCoverage(
     const isFull = sosForm === 'sos_full';
     add('sosReversed', referenceZ(
       score.rawScore, isFull ? 'sos_full' : 'sos_screening',
-      norms, isFull ? 63.0 : 15.3, isFull ? 12.8 : 4.6,
+      norms, ALL_SCALES[sosForm].scoring.range,
     ));
   }
 
@@ -213,17 +225,17 @@ function calculateDimensionsWithCoverage(
     const isFull = guiltForm === 'mosher_guilt_full';
     add('sexGuilt', referenceZ(
       score.rawScore, isFull ? 'mosher_guilt_full' : 'mosher_guilt',
-      norms, isFull ? 62.7 : 25.6, isFull ? 19.2 : 7.8,
+      norms, ALL_SCALES[guiltForm].scoring.range,
     ));
   }
 
   const shame = scoreQuestions(responses, ALL_SCALES.kiss9_shame.questions);
   const teenAttitudes = scoreQuestions(responses, ALL_SCALES.teen_sexual_attitudes.questions);
   if (shame.complete) {
-    add('sexualShame', referenceZ(shame.rawScore, 'kiss9_shame', norms, 18.7, 6.4));
+    add('sexualShame', referenceZ(shame.rawScore, 'kiss9_shame', norms, ALL_SCALES.kiss9_shame.scoring.range));
   } else if (teenAttitudes.complete) {
     add('sexualShame', referenceZ(
-      teenAttitudes.rawScore, 'teen_sexual_attitudes', norms, 25, 6.2,
+      teenAttitudes.rawScore, 'teen_sexual_attitudes', norms, ALL_SCALES.teen_sexual_attitudes.scoring.range,
     ));
   }
 
@@ -245,7 +257,7 @@ function calculateDimensionsWithCoverage(
       const cognition = scoreQuestions(responses, ALL_SCALES.sexual_cognition.questions);
       if (cognition.complete) {
         add('sisOverSes', referenceZ(
-          cognition.rawScore, 'sexual_cognition', norms, 28.5, 7.1,
+          cognition.rawScore, 'sexual_cognition', norms, ALL_SCALES.sexual_cognition.scoring.range,
         ));
       }
     }
@@ -285,6 +297,7 @@ export function calculateSRI(
 
   return {
     totalScore,
+    scoringVersion: '2026-11',
     zScore: compositeZ,
     percentile,
     level,
@@ -338,7 +351,7 @@ export function calculateAssessmentResults(
     const meanKey = scaleId.replace('_sf', '_total');
     const mean = normsData.means[meanKey] ?? normsData.means[scaleId];
     const stdDev = normsData.standardDeviations[meanKey] ?? normsData.standardDeviations[scaleId];
-    const zScore = Number.isFinite(mean) && Number.isFinite(stdDev) && stdDev > 0
+    const zScore = normsData.sampleSize > 0 && Number.isFinite(mean) && Number.isFinite(stdDev) && stdDev > 0
       ? calculateZScore(scored.rawScore, mean, stdDev)
       : rangeBasedDisplayZ(scored.rawScore, scale.scoring.range);
     const percentile = normalCDF(zScore) * 100;
