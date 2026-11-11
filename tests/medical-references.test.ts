@@ -88,3 +88,20 @@ test('getMedicalReference is a stable lookup alias', () => {
     'https://doi.org/10.1080/00224490209552130',
   );
 });
+
+test('recent questionnaire validation and COSMIN evidence are present', () => {
+  const expected = [
+    'dual-control-scoping-review-2023',
+    'sis-ses-sf-spain-2024',
+    'sds3-multinational-2024',
+    'sexual-distress-collectivistic-2025',
+    'cosmin-sexual-health-proms-2026',
+  ];
+  for (const id of expected) {
+    const source = lookupMedicalReference(id);
+    assert.ok(source, `missing research evidence: ${id}`);
+    assert.equal(source.type, 'research');
+    assert.match(source.url, /^https:\/\//);
+  }
+  assert.equal(lookupMedicalReference('cosmin-sexual-health-proms-2026')?.year, 2026);
+});

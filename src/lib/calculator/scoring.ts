@@ -97,3 +97,26 @@ export function adaptedInhibitionContrast(inhibitionMean: number, excitationMean
   if (!Number.isFinite(inhibitionMean) || !Number.isFinite(excitationMean)) return 0;
   return Math.max(-2, Math.min(2, (inhibitionMean - excitationMean) / 2));
 }
+
+/**
+ * External reference moments are only used when a source explicitly supplies
+ * observations. Built-in illustrative moments have sampleSize=0 and must not
+ * be used to make person-level norm or percentile claims.
+ */
+export function referenceOrRangeZ(
+  raw: number,
+  key: string,
+  norms: {
+    sampleSize: number;
+    means: Record<string, number>;
+    standardDeviations: Record<string, number>;
+  },
+  theoreticalRange: readonly [number, number],
+): number {
+  const mean = norms.means[key];
+  const std = norms.standardDeviations[key];
+  return norms.sampleSize > 0 && Number.isFinite(mean) &&
+    Number.isFinite(std) && std > 0
+    ? standardize(raw, mean, std)
+    : rangeBasedDisplayZ(raw, theoreticalRange);
+}

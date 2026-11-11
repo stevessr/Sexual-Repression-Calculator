@@ -59,8 +59,36 @@ test('context analysis clamps malformed numeric responses', () => {
     { questionId: 'wb_consent', value: -4 },
   ]);
 
-  assert.equal(summary.distressScore, 50);
+  assert.equal(summary.distressScore, 100);
   assert.equal(summary.protectiveContextScore, 0);
   assert.equal(summary.impactFlag, false);
   assert.equal(summary.safetyFlag, true);
+});
+
+test('pressure is a safety-context signal, never an automatic distress score', () => {
+  const responses = [
+    { questionId: 'wb_distress', value: 0 },
+    { questionId: 'wb_impact', value: 0 },
+    { questionId: 'wb_avoidance', value: 0 },
+    { questionId: 'wb_shame', value: 0 },
+    { questionId: 'wb_pressure', value: 4 },
+    { questionId: 'wb_consent', value: 4 },
+    { questionId: 'wb_boundaries', value: 4 },
+  ];
+  const summary = calculateClinicalContext(responses);
+  assert.ok(summary);
+  assert.equal(summary.distressScore, 0);
+  assert.equal(summary.safetyFlag, true);
+  assert.equal(summary.protectiveContextScore, 100);
+});
+
+test('latest answers win; invalid answers do not become a low-symptom response', () => {
+  const summary = calculateClinicalContext([
+    { questionId: 'wb_distress', value: 0 },
+    { questionId: 'wb_distress', value: 4 },
+    { questionId: 'wb_impact', value: Number.NaN },
+  ]);
+  assert.ok(summary);
+  assert.equal(summary.distressScore, 100);
+  assert.equal(summary.impactFlag, false);
 });
